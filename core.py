@@ -907,7 +907,9 @@ class RenderProcess:
     def start(self):
         import subprocess
         flags=getattr(subprocess,'CREATE_NO_WINDOW',0)
-        self.proc=subprocess.Popen([sys.executable,str(Path(__file__).with_name('render_worker.py'))],
+        # Paketlenmiş sürümde (exe) python.exe yok: exe kendini işçi kipinde başlatır (okuma_giris.py).
+        komut=[sys.executable,'--render-worker'] if getattr(sys,'frozen',False) else [sys.executable,str(Path(__file__).with_name('render_worker.py'))]
+        self.proc=subprocess.Popen(komut,
             stdin=subprocess.PIPE,stdout=subprocess.PIPE,cwd=str(Path(__file__).parent),creationflags=flags)
 
     def render(self, path, page, scale, annotations=(), alpha=False):

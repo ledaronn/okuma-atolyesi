@@ -25,11 +25,17 @@ Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
 > and `.docx`, and an optional MCP server lets AI assistants read your library. No account or
 > internet connection is needed after setup. The interface is in Turkish.
 >
-> **Run it (Windows):** install Python 3.11+, double-click `kur.bat` once, then `baslat.bat`.
+> **Download (Windows):** [latest release](https://github.com/ledaronn/okuma-atolyesi/releases/latest), run
+> `OkumaAtolyesi-Setup-<version>.exe`; no Python needed. From source: install Python 3.11+,
+> double-click `kur.bat` once, then `baslat.bat`.
 > Elsewhere: `python -m venv .venv`, `pip install -r requirements.txt`, `python app.py`.
 > License: AGPL-3.0.
 
-## Windows'ta başlat
+## İndir
+
+**[⬇ Okuma Atölyesi'ni indir (Windows)](https://github.com/ledaronn/okuma-atolyesi/releases/latest)**: son sürümde *Assets* altındaki `OkumaAtolyesi-Setup-<sürüm>.exe` dosyasını çalıştır. Windows 10/11, 64 bit; Python ya da yönetici izni gerekmez. Kurulum programı henüz imzalı olmadığı için Windows "Bilgisayarınız korundu" diyebilir: **Ek bilgi → Yine de çalıştır**. Kaldırma Ayarlar › Uygulamalar'dan; kitaplığın silinmez.
+
+## Kaynaktan başlat (geliştiriciler)
 
 1. ZIP dosyasını aç. `OkumaAtolyesi` klasörünü örneğin `C:\Araclar\OkumaAtolyesi` konumuna koy. Mevcut AI projesinin içine yerleştirmen gerekmez.
 2. Python 3.11 veya daha yeni, 64 bit bir Python kurulu olsun. Python Launcher (`py`) kurulumda seçili olmalı.
@@ -38,7 +44,7 @@ Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
    Masaüstüne ikonlu, konsolsuz bir kısayol için bir kez `.venv\Scripts\python.exe kisayol.py` çalıştır ("Okuma Atölyesi.lnk").
 5. `PDF ekle` ile bir PDF seç veya pencereye PDF bırak. Paketteki `Ornek_Belge.pdf` ile başlayabilirsin.
 
-Bu paket kaynak kod içerir; hazır bir `.exe` değildir. Okuyucu için API anahtarı gerekmez. Kurulumdan sonra temel özellikler internetsiz çalışır. Mevcut AI ortamına bu paketin requirements dosyasını kurma.
+Bu yol kaynak koddan çalıştırır; hazır kurulum için yukarıdaki İndir bölümüne bak. Okuyucu için API anahtarı gerekmez. Kurulumdan sonra temel özellikler internetsiz çalışır. Mevcut AI ortamına bu paketin requirements dosyasını kurma.
 
 Python Launcher yoksa, Python 3.11+ ile terminalde:
 

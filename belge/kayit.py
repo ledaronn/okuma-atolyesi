@@ -27,7 +27,10 @@ TUR_ADI = {".pdf": "PDF belgesi (Okuma Atölyesi)", ".docx": "Word belgesi (Okum
 
 def komut() -> str:
     """Dosya açma komutu: konsolsuz pythonw + başlatıcı. Yollar sabit (bu
-    klasör); kullanıcı verisinden program yolu alınmaz."""
+    klasör); kullanıcı verisinden program yolu alınmaz. Paketlenmiş sürümde
+    exe'nin kendisi (okuma_giris.py dosya türüne göre yönlendirir)."""
+    if getattr(sys, "frozen", False):
+        return f'"{sys.executable}" "%1"'
     pythonw = KOK_DIZIN / ".venv" / "Scripts" / "pythonw.exe"
     return f'"{pythonw}" "{KOK_DIZIN / "ac.pyw"}" "%1"'
 
@@ -46,7 +49,7 @@ def _yaz(winreg, yol: str, ad: str | None, deger: str) -> None:
 
 def kaydet(kok: str = "Software", uzantilar=(".pdf", ".docx")) -> None:
     winreg = _winreg()
-    ikon = str(KOK_DIZIN / "okuma.ico")
+    ikon = sys.executable if getattr(sys, "frozen", False) else str(KOK_DIZIN / "okuma.ico")
     for uz in uzantilar:
         pid = PROGID[uz]
         _yaz(winreg, rf"{kok}\Classes\{pid}", None, TUR_ADI[uz])

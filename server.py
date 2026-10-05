@@ -142,7 +142,8 @@ def create_server(lib: Library, allowed_roots=None):
         key=lib.request_reader('open',document_id,page)
         current=lib.reader_context()
         if current.get('is_open'): return wait_reader(key,current.get('pid'))
-        command=[sys.executable,str(Path(__file__).resolve().with_name('app.py')),'--data-dir',str(lib.root)]
+        # Paketlenmiş sürümde exe argümansız okuyucudur (okuma_giris.py); kaynaktan app.py.
+        command=([sys.executable] if getattr(sys,'frozen',False) else [sys.executable,str(Path(__file__).resolve().with_name('app.py'))])+['--data-dir',str(lib.root)]
         # Kütüphane kimliğinden başka komut/argüman kabul etmez; stdout MCP'ye karışmaz.
         try:
             proc=subprocess.Popen(command,stdin=subprocess.DEVNULL,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,shell=False,
