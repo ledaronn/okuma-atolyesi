@@ -1,0 +1,80 @@
+içe alma kitap_200:  8980.9 ms  (200 sayfa)
+içe alma slayt_120:   430.7 ms  (120 sayfa)
+içe alma slayt_gercek_metin:   108.9 ms  (20 sayfa)
+içe alma slayt_gercek_goruntu:   133.4 ms  (15 sayfa)
+
+=== B. Arayüz: gerçek Window (offscreen 1450x950) ===
+
+--- kitap_200 (200 sayfa) ---
+  açılış (open_doc + ilk render):   341.0 ms | ilk render_visible 3 sayfa üretti: [1, 1, 2] | tıkanma yok | boyama 3 kez, ort    0.8 | medyan    0.7 | maks    1.1 ms (n=3)
+  görünen pencere yüksekliği 755 px, zoom 1.00, sayfa yüksekliği 842 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (13431 birim): toplam  1887.2 ms
+     KAYDIRMA SIRASINDA: render_visible 38 çağrı, lib.render 16 sayfa, tıkanma 0 kez/0 ms, boyama 121 kez/26 ms
+     DURDUKTAN SONRA: render_visible 1 çağrı, lib.render 0 sayfa, tıkanma 1 kez/31 ms
+     render_visible 39 çağrı: ort    0.5 | medyan    0.3 | maks    1.5 ms (n=39)
+     lib.render 16 sayfa, sayfa başına ort   12.0 | medyan   12.2 | maks   13.8 ms (n=16)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 1 kez, toplam 31 ms, en uzun 31 ms | boyama 121 kez, ort    0.2 | medyan    0.2 | maks    0.5 ms (n=121)
+  yavaş kaydırma 40 tık: render_visible 40 çağrı | lib.render 5 sayfa | tıkanma yok | boyama 40 kez, ort    0.3 | medyan    0.3 | maks    0.7 ms (n=40)
+  genişliğe sığdır (zoom 1.04):   604.8 ms | 4 sayfa üretildi, sayfa başına ort   14.6 | medyan   10.1 | maks   28.8 ms (n=4) | tıkanma 1 kez, toplam 19 ms, en uzun 19 ms | boyama 3 kez, ort    1.1 | medyan    0.7 | maks    2.1 ms (n=3)
+  bu yakınlıkta yavaş kaydırma 40 tık: lib.render 5 sayfa, sayfa başına ort   22.3 | medyan   21.9 | maks   23.9 ms (n=5) | tıkanma yok | boyama 40 kez, ort    0.4 | medyan    0.4 | maks    0.6 ms (n=40)
+  Ctrl+tekerlek 1 adım (zoom 0.93):   404.9 ms | 4 sayfa yeniden üretildi | tıkanma yok | boyama 4 kez, ort    0.7 | medyan    0.7 | maks    1.2 ms (n=4)
+  sayfa atlama →100:   403.4 ms | 4 sayfa üretildi | tıkanma yok | boyama 3 kez, ort    0.6 | medyan    0.7 | maks    0.7 ms (n=3)
+  tek işaretleme sonrası (katman): 0 sayfa yeniden üretildi | tıkanma 1 kez, toplam 22 ms, en uzun 22 ms | boyama 2 kez, ort    2.7 | medyan    2.7 | maks    4.9 ms (n=2)
+  bellekte tutulan sayfa görüntüsü: 4 sayfa, ≈14 MB
+
+--- slayt_120 (120 sayfa) ---
+  açılış (open_doc + ilk render):   370.3 ms | ilk render_visible 4 sayfa üretti: [1, 1, 2, 3] | tıkanma yok | boyama 5 kez, ort    1.0 | medyan    0.6 | maks    2.1 ms (n=5)
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 540 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (13431 birim): toplam  1875.3 ms
+     KAYDIRMA SIRASINDA: render_visible 38 çağrı, lib.render 23 sayfa, tıkanma 0 kez/0 ms, boyama 123 kez/32 ms
+     DURDUKTAN SONRA: render_visible 1 çağrı, lib.render 1 sayfa, tıkanma 1 kez/17 ms
+     render_visible 39 çağrı: ort    0.6 | medyan    0.6 | maks    1.0 ms (n=39)
+     lib.render 24 sayfa, sayfa başına ort    8.8 | medyan    8.9 | maks   10.8 ms (n=24)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 1 kez, toplam 17 ms, en uzun 17 ms | boyama 123 kez, ort    0.3 | medyan    0.2 | maks    0.9 ms (n=123)
+  yavaş kaydırma 40 tık: render_visible 40 çağrı | lib.render 8 sayfa | tıkanma yok | boyama 42 kez, ort    0.4 | medyan    0.4 | maks    0.7 ms (n=42)
+  genişliğe sığdır (zoom 0.66):   605.9 ms | 7 sayfa üretildi, sayfa başına ort    5.7 | medyan    4.7 | maks   12.7 ms (n=7) | tıkanma yok | boyama 5 kez, ort    1.0 | medyan    0.6 | maks    2.7 ms (n=5)
+  bu yakınlıkta yavaş kaydırma 40 tık: lib.render 12 sayfa, sayfa başına ort    9.9 | medyan   10.2 | maks   14.1 ms (n=12) | tıkanma 1 kez, toplam 19 ms, en uzun 19 ms | boyama 42 kez, ort    0.4 | medyan    0.4 | maks    0.9 ms (n=42)
+  Ctrl+tekerlek 1 adım (zoom 0.59):   409.5 ms | 8 sayfa yeniden üretildi | tıkanma yok | boyama 4 kez, ort    1.1 | medyan    1.0 | maks    2.2 ms (n=4)
+  sayfa atlama →60:   402.7 ms | 8 sayfa üretildi | tıkanma yok | boyama 5 kez, ort    0.4 | medyan    0.4 | maks    0.8 ms (n=5)
+  tek işaretleme sonrası (katman): 0 sayfa yeniden üretildi | tıkanma yok | boyama 2 kez, ort    0.3 | medyan    0.3 | maks    0.3 ms (n=2)
+  bellekte tutulan sayfa görüntüsü: 8 sayfa, ≈17 MB
+
+--- slayt_gercek_metin (20 sayfa) ---
+  açılış (open_doc + ilk render):   358.8 ms | ilk render_visible 4 sayfa üretti: [1, 1, 2, 3] | tıkanma yok | boyama 5 kez, ort    0.7 | medyan    0.6 | maks    1.6 ms (n=5)
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 540 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (10523 birim): toplam  1802.3 ms
+     KAYDIRMA SIRASINDA: render_visible 30 çağrı, lib.render 18 sayfa, tıkanma 0 kez/0 ms, boyama 106 kez/26 ms
+     DURDUKTAN SONRA: render_visible 0 çağrı, lib.render 0 sayfa, tıkanma 0 kez/0 ms
+     render_visible 30 çağrı: ort    0.5 | medyan    0.4 | maks    0.9 ms (n=30)
+     lib.render 18 sayfa, sayfa başına ort   20.1 | medyan   19.0 | maks   39.2 ms (n=18)
+     aynı sayfa tekrar üretildi: 1 kez | tıkanma yok | boyama 106 kez, ort    0.2 | medyan    0.2 | maks    0.9 ms (n=106)
+  yavaş kaydırma 40 tık: render_visible 0 çağrı | lib.render 0 sayfa | tıkanma yok
+  genişliğe sığdır (zoom 0.66):   602.5 ms | 5 sayfa üretildi, sayfa başına ort   15.2 | medyan    8.8 | maks   44.4 ms (n=5) | tıkanma yok | boyama 4 kez, ort    1.0 | medyan    0.6 | maks    2.5 ms (n=4)
+  bu yakınlıkta yavaş kaydırma 40 tık: lib.render 0 sayfa, sayfa başına - | tıkanma yok
+  Ctrl+tekerlek 1 adım (zoom 0.59):   402.1 ms | 5 sayfa yeniden üretildi | tıkanma yok | boyama 4 kez, ort    0.7 | medyan    0.7 | maks    1.4 ms (n=4)
+  sayfa atlama →10:   402.2 ms | 8 sayfa üretildi | tıkanma yok | boyama 5 kez, ort    0.4 | medyan    0.5 | maks    0.6 ms (n=5)
+  tek işaretleme sonrası (katman): 0 sayfa yeniden üretildi | tıkanma yok | boyama 2 kez, ort    0.4 | medyan    0.4 | maks    0.5 ms (n=2)
+  bellekte tutulan sayfa görüntüsü: 8 sayfa, ≈17 MB
+
+--- slayt_gercek_goruntu (15 sayfa) ---
+  açılış (open_doc + ilk render):   357.6 ms | ilk render_visible 4 sayfa üretti: [1, 1, 2, 3] | tıkanma yok | boyama 5 kez, ort    0.5 | medyan    0.6 | maks    0.7 ms (n=5)
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 595 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (8542 birim): toplam  1739.3 ms
+     KAYDIRMA SIRASINDA: render_visible 21 çağrı, lib.render 12 sayfa, tıkanma 0 kez/0 ms, boyama 81 kez/7 ms
+     DURDUKTAN SONRA: render_visible 0 çağrı, lib.render 0 sayfa, tıkanma 0 kez/0 ms
+     render_visible 21 çağrı: ort    0.2 | medyan    0.1 | maks    0.6 ms (n=21)
+     lib.render 12 sayfa, sayfa başına ort   76.2 | medyan   83.2 | maks  104.1 ms (n=12)
+     aynı sayfa tekrar üretildi: 2 kez | tıkanma yok | boyama 81 kez, ort    0.1 | medyan    0.0 | maks    0.9 ms (n=81)
+  yavaş kaydırma 40 tık: render_visible 0 çağrı | lib.render 0 sayfa | tıkanma yok
+  genişliğe sığdır (zoom 0.75):   601.7 ms | 4 sayfa üretildi, sayfa başına ort   21.5 | medyan   17.9 | maks   34.9 ms (n=4) | tıkanma yok | boyama 3 kez, ort    1.3 | medyan    0.6 | maks    3.1 ms (n=3)
+  bu yakınlıkta yavaş kaydırma 40 tık: lib.render 0 sayfa, sayfa başına - | tıkanma yok
+  Ctrl+tekerlek 1 adım (zoom 0.67):   404.1 ms | 4 sayfa yeniden üretildi | tıkanma yok | boyama 3 kez, ort    0.9 | medyan    0.4 | maks    2.0 ms (n=3)
+  sayfa atlama →7:   401.2 ms | 6 sayfa üretildi | tıkanma 1 kez, toplam 17 ms, en uzun 17 ms | boyama 4 kez, ort    0.5 | medyan    0.4 | maks    1.1 ms (n=4)
+  tek işaretleme sonrası (katman): 0 sayfa yeniden üretildi | tıkanma 1 kez, toplam 23 ms, en uzun 23 ms | boyama 2 kez, ort    0.5 | medyan    0.5 | maks    0.5 ms (n=2)
+  bellekte tutulan sayfa görüntüsü: 6 sayfa, ≈12 MB
+
+Üretim iş parçacığı: yalnızca UI DIŞI (1 farklı iş parçacığı)
