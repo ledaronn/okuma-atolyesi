@@ -16,6 +16,19 @@
 
 Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
 
+> **In English.** Okuma Atölyesi ("Reading Workshop") is a local PDF library and reader with a
+> Word-like document editor. Highlight, draw, annotate and bookmark PDFs; organize them with
+> favorites, collections and tags; search the full text of every document; merge PDFs, OCR scanned
+> pages, and back up your library. The editor writes `.docx` files from scratch (formatting, lists,
+> tables, images, page layout, headers/footers, PDF export, printing) and opens a document in
+> LibreOffice when you need full Word features. It can register as an "Open with" app for `.pdf`
+> and `.docx`, and an optional MCP server lets AI assistants read your library. No account or
+> internet connection is needed after setup. The interface is in Turkish.
+>
+> **Run it (Windows):** install Python 3.11+, double-click `kur.bat` once, then `baslat.bat`.
+> Elsewhere: `python -m venv .venv`, `pip install -r requirements.txt`, `python app.py`.
+> License: AGPL-3.0.
+
 ## Windows'ta başlat
 
 1. ZIP dosyasını aç. `OkumaAtolyesi` klasörünü örneğin `C:\Araclar\OkumaAtolyesi` konumuna koy. Mevcut AI projesinin içine yerleştirmen gerekmez.
@@ -247,3 +260,7 @@ Doğrulama kapsamı ve gerçek test sonucu `TEST_RAPORU.md` dosyasındadır. Win
 - `Ornek_Belge.pdf`: denemek için hazırlanmış üç sayfalık örnek.
 
 Teknik başvuru: [PyMuPDF](https://pymupdf.readthedocs.io/en/latest/), [Qt for Python](https://doc.qt.io/qtforpython-6/), [MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk), [SQLite FTS5](https://sqlite.org/fts5.html).
+
+## Lisans
+
+Okuma Atölyesi [GNU AGPL-3.0](LICENSE) lisansıyla dağıtılır: kullanabilir, değiştirebilir ve paylaşabilirsin. Değiştirilmiş bir sürümü dağıtırsan ya da ağ üzerinden kullandırırsan, onun kaynak kodunu da aynı lisansla açman gerekir. Lisans, kullanılan PDF kütüphanesi PyMuPDF (AGPL-3.0) ile uyumlu olsun diye seçildi.
