@@ -24,7 +24,7 @@ datas += collect_data_files("pymupdf")
 datas += collect_data_files("docx")          # python-docx sablonlari (default.docx)
 
 hiddenimports = [
-    "app", "core", "server", "render_worker", "assistant_link",
+    "app", "core", "server", "render_worker", "assistant_link", "ceviri", "ceviri_en",
     "belge", "belge.editor", "belge.docx_io", "belge.kayit",
     *collect_submodules("mcp", filter=lambda ad: not ad.startswith("mcp.cli")), "pymupdf", "docx",
 ]

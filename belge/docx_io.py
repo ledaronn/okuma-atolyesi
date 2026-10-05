@@ -21,6 +21,7 @@ from __future__ import annotations
 import io
 import re
 from dataclasses import dataclass, field
+from ceviri import t as _t
 
 from PySide6.QtCore import QBuffer, QByteArray, QIODevice, QUrl
 from PySide6.QtGui import (QBrush, QColor, QFont, QImage, QTextBlockFormat, QTextCharFormat, QTextCursor,
@@ -65,22 +66,22 @@ class OkumaSonucu:
 # Kayip korumasi: editorun tasiyamadigi Word icerigi
 # --------------------------------------------------------------------------
 DESTEKSIZ = [
-    (r"<w:ins\b|<w:del\b", "izlenen değişiklikler"),
-    (r"<w:commentReference\b", "yorumlar"),
-    (r"<w:footnoteReference\b|<w:endnoteReference\b", "dipnot/son notlar"),
-    (r"<w:txbxContent\b", "metin kutuları"),
-    (r"<wp:anchor\b", "kayan (metin dışı) resim/şekil"),
-    (r"<w:sdt\b", "içerik denetimi / içindekiler alanı"),
-    (r"<m:oMath\b", "denklemler"),
-    (r"<c:chart\b", "grafikler"),
-    (r'<w:vMerge\b', "dikey birleştirilmiş tablo hücreleri"),
+    (r"<w:ins\b|<w:del\b", _t("izlenen değişiklikler")),
+    (r"<w:commentReference\b", _t("yorumlar")),
+    (r"<w:footnoteReference\b|<w:endnoteReference\b", _t("dipnot/son notlar")),
+    (r"<w:txbxContent\b", _t("metin kutuları")),
+    (r"<wp:anchor\b", _t("kayan (metin dışı) resim/şekil")),
+    (r"<w:sdt\b", _t("içerik denetimi / içindekiler alanı")),
+    (r"<m:oMath\b", _t("denklemler")),
+    (r"<c:chart\b", _t("grafikler")),
+    (r'<w:vMerge\b', _t("dikey birleştirilmiş tablo hücreleri")),
 ]
 
 
 def desteksiz_icerik(belge_xml: str, bolum_sayisi: int) -> list[str]:
     bulunan = [ad for kalip, ad in DESTEKSIZ if re.search(kalip, belge_xml)]
     if bolum_sayisi > 1:
-        bulunan.append(f"birden çok bölüm ({bolum_sayisi}); yalnızca ilkinin sayfa düzeni korunur")
+        bulunan.append(_t("birden çok bölüm ({n}); yalnızca ilkinin sayfa düzeni korunur", n=bolum_sayisi))
     return bulunan
 
 

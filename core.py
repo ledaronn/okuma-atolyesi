@@ -15,6 +15,7 @@ from contextlib import closing, contextmanager
 from functools import wraps
 
 import pymupdf as fitz
+from ceviri import t as _t
 
 PDF_LOCK = threading.RLock()  # MuPDF aynı süreçte eşzamanlı thread kullanımını desteklemez.
 
@@ -89,7 +90,7 @@ def register_library(name,path):
     name=' '.join(str(name).split()) or default_library_name(path); path=str(Path(path).expanduser().resolve()); libs=_read_registry()
     for x in libs:
         if x['path'].lower()==path.lower(): x['name']=name; _write_registry(libs); return x
-    if any(x['name'].lower()==name.lower() for x in libs): raise ValueError('Bu adda bir kütüphane zaten var.')
+    if any(x['name'].lower()==name.lower() for x in libs): raise ValueError(_t('Bu adda bir kütüphane zaten var.'))
     rec={'name':name,'path':path}; libs.append(rec); _write_registry(libs); return rec
 
 
@@ -243,9 +244,9 @@ class Library:
 
     def add_shelf(self,name,color=None):
         name=str(name).strip()[:120]
-        if not name: raise ValueError('Raf adı boş olamaz.')
+        if not name: raise ValueError(_t('Raf adı boş olamaz.'))
         with self.db() as db:
-            if db.execute('SELECT 1 FROM shelves WHERE name=?',(name,)).fetchone(): raise ValueError('Bu adda bir raf zaten var.')
+            if db.execute('SELECT 1 FROM shelves WHERE name=?',(name,)).fetchone(): raise ValueError(_t('Bu adda bir raf zaten var.'))
             n=db.execute('SELECT COUNT(*) FROM shelves').fetchone()[0]; sid=uuid.uuid4().hex
             color=self._check_color(color or self.SHELF_COLORS[n%len(self.SHELF_COLORS)])
             db.execute('INSERT INTO shelves VALUES(?,?,?,?,?)',(sid,name,color,n,time.time())); self._log(db,'shelf',sid)
@@ -254,12 +255,12 @@ class Library:
     @staticmethod
     def _check_color(color):
         color=str(color)
-        if len(color)!=7 or color[0]!='#': raise ValueError('Renk #RRGGBB olmalı.')
+        if len(color)!=7 or color[0]!='#': raise ValueError(_t('Renk #RRGGBB olmalı.'))
         int(color[1:],16); return color
 
     def shelf(self,shelf_id):
         with self.db() as db: row=db.execute('SELECT * FROM shelves WHERE id=?',(shelf_id,)).fetchone()
-        if not row: raise ValueError('Raf bulunamadı.')
+        if not row: raise ValueError(_t('Raf bulunamadı.'))
         return dict(row)
 
     def update_shelf(self,shelf_id,name=None,color=None):
@@ -267,8 +268,8 @@ class Library:
         with self.db() as db:
             if name is not None:
                 name=str(name).strip()[:120]
-                if not name: raise ValueError('Raf adı boş olamaz.')
-                if db.execute('SELECT 1 FROM shelves WHERE name=? AND id!=?',(name,shelf_id)).fetchone(): raise ValueError('Bu adda bir raf zaten var.')
+                if not name: raise ValueError(_t('Raf adı boş olamaz.'))
+                if db.execute('SELECT 1 FROM shelves WHERE name=? AND id!=?',(name,shelf_id)).fetchone(): raise ValueError(_t('Bu adda bir raf zaten var.'))
                 db.execute('UPDATE shelves SET name=? WHERE id=?',(name,shelf_id)); db.execute('UPDATE documents SET collection=? WHERE shelf_id=?',(name,shelf_id))
             if color is not None: db.execute('UPDATE shelves SET color=? WHERE id=?',(self._check_color(color),shelf_id))
             self._log(db,'shelf',shelf_id)
@@ -315,8 +316,8 @@ class Library:
 
     def set_custom_cover(self,doc_id,png_bytes):
         self.document(doc_id)
-        if not isinstance(png_bytes,(bytes,bytearray)) or len(png_bytes)<8 or bytes(png_bytes[:8])!=b'\x89PNG\r\n\x1a\n': raise ValueError('Kapak PNG olmalı.')
-        if len(png_bytes)>8*1024*1024: raise ValueError('Kapak 8 MB\'ı aşamaz.')
+        if not isinstance(png_bytes,(bytes,bytearray)) or len(png_bytes)<8 or bytes(png_bytes[:8])!=b'\x89PNG\r\n\x1a\n': raise ValueError(_t('Kapak PNG olmalı.'))
+        if len(png_bytes)>8*1024*1024: raise ValueError(_t('Kapak 8 MB\'ı aşamaz.'))
         p=self.root/'covers'/(doc_id+'.custom.png'); tmp=p.with_suffix('.tmp')
         with tmp.open('wb') as f: f.write(png_bytes); f.flush(); os.fsync(f.fileno())
         os.replace(tmp,p)
@@ -361,17 +362,17 @@ class Library:
         with self.db() as db:
             row = db.execute('SELECT * FROM documents WHERE id=?', (doc_id,)).fetchone()
         if not row:
-            raise ValueError('Belge bulunamadı.')
+            raise ValueError(_t('Belge bulunamadı.'))
         return dict(row)
 
     def path(self, doc_id):
         self.document(doc_id)
         # ID veritabanında doğrulandıktan sonra bile dosya adı biçimi zorunlu.
         if not isinstance(doc_id, str) or len(doc_id) != 32 or any(c not in '0123456789abcdef' for c in doc_id):
-            raise ValueError('Geçersiz belge kimliği.')
+            raise ValueError(_t('Geçersiz belge kimliği.'))
         target = (self.root / 'originals' / (doc_id + '.pdf')).resolve()
         if target.parent != (self.root / 'originals').resolve():
-            raise ValueError('Belge yolu depo dışında.')
+            raise ValueError(_t('Belge yolu depo dışında.'))
         return target
 
     def list_documents(self, query='', collection='', favorites=False, archived=False, limit=500, shelf=None):
@@ -386,9 +387,9 @@ class Library:
     def import_pdf(self, source, password=''):
         src = Path(source).expanduser().resolve(strict=True)
         if src.suffix.lower() != '.pdf' or not src.is_file():
-            raise ValueError('Bir PDF dosyası seçin.')
+            raise ValueError(_t('Bir PDF dosyası seçin.'))
         if src.stat().st_size > 512 * 1024 * 1024:
-            raise ValueError('İlk sürümde dosya sınırı 512 MB.')
+            raise ValueError(_t('İlk sürümde dosya sınırı 512 MB.'))
         raw = src.read_bytes()
         digest = hashlib.sha256(raw).hexdigest()
         with self.db() as db:
@@ -402,9 +403,9 @@ class Library:
         try:
             with fitz.open(stream=raw, filetype='pdf') as doc:
                 if doc.needs_pass and not doc.authenticate(password):
-                    raise ValueError('PDF parola korumalı. Doğru parolayla tekrar ekleyin.')
+                    raise ValueError(_t('PDF parola korumalı. Doğru parolayla tekrar ekleyin.'))
                 if not len(doc):
-                    raise ValueError('PDF içinde sayfa yok.')
+                    raise ValueError(_t('PDF içinde sayfa yok.'))
                 # Parola saklanmaz; korumalı dosyanın yerel çalışma kopyası çözülür.
                 stored = doc.tobytes(encryption=fitz.PDF_ENCRYPT_NONE) if doc.is_encrypted or password else raw
                 title = (doc.metadata.get('title') or src.stem).strip() or src.stem
@@ -436,13 +437,13 @@ class Library:
     def update_document(self, doc_id, **fields):
         self.document(doc_id)
         allowed = {'title','collection','tags','favorite','archived'}
-        if set(fields) - allowed: raise ValueError('Geçersiz alan.')
+        if set(fields) - allowed: raise ValueError(_t('Geçersiz alan.'))
         with self.db() as db:
             for k,v in fields.items():
                 if k in ('favorite','archived'): v=int(bool(v))
                 else:
                     v=str(v).strip()[:1000]
-                    if k=='title' and not v: raise ValueError('Başlık boş olamaz.')
+                    if k=='title' and not v: raise ValueError(_t('Başlık boş olamaz.'))
                 db.execute(f'UPDATE documents SET {k}=? WHERE id=?',(v,doc_id))
             self._log(db,'metadata',doc_id)
         if 'collection' in fields:  # koleksiyon adı = raf adı; raf yoksa açılır
@@ -459,11 +460,11 @@ class Library:
     def save_state(self, doc_id, page, offset=0, zoom=1.0, seen=None, layout=None):
         """seen: görülen sayfa numaraları (ilerleme). layout: 'auto'|'slide'|'book' (kullanıcı tercihi). None verilirse eskisi korunur."""
         d=self.check_page(doc_id,page)
-        if not all(math.isfinite(float(x)) for x in (offset,zoom)): raise ValueError('Geçersiz konum.')
+        if not all(math.isfinite(float(x)) for x in (offset,zoom)): raise ValueError(_t('Geçersiz konum.'))
         old=self.get_state(doc_id)
         data={'page':page,'offset':max(0,min(float(offset),1)), 'zoom':max(.25,min(float(zoom),4))}
         if layout is None: layout=old.get('layout','auto')
-        if layout not in ('auto','slide','book'): raise ValueError('Düzen auto/slide/book olmalı.')
+        if layout not in ('auto','slide','book'): raise ValueError(_t('Düzen auto/slide/book olmalı.'))
         data['layout']=layout
         if seen is None: seen=old.get('seen',[])
         data['seen']=sorted({int(p) for p in seen if isinstance(p,int) and not isinstance(p,bool) and 1<=p<=d['pages']})
@@ -475,14 +476,14 @@ class Library:
     def check_page(self, doc_id, page):
         d=self.document(doc_id)
         if isinstance(page,bool) or not isinstance(page,int) or not 1<=page<=d['pages']:
-            raise ValueError(f"Sayfa 1–{d['pages']} arasında olmalı.")
+            raise ValueError(_t("Sayfa 1–{n} arasında olmalı.",n=d['pages']))
         return d
 
     def read_pages(self, doc_id, start=1, end=0, max_chars=24000):
         d=self.check_page(doc_id,start)
         end=end or min(d['pages'],start+9)
         self.check_page(doc_id,end)
-        if end<start or end-start>49: raise ValueError('Bir çağrıda en fazla 50 sayfa, artan aralık kullanın.')
+        if end<start or end-start>49: raise ValueError(_t('Bir çağrıda en fazla 50 sayfa, artan aralık kullanın.'))
         budget=max(500,min(int(max_chars),60000)); result=[]; truncated=False
         with self.db() as db:
             rows=db.execute('SELECT page,text FROM page_text WHERE doc_id=? AND page BETWEEN ? AND ? ORDER BY page',(doc_id,start,end)).fetchall()
@@ -537,44 +538,44 @@ class Library:
     @pdf_locked
     def add_annotation(self, doc_id, page, kind, data):
         self.check_page(doc_id,page)
-        if kind not in {'ink','highlight','underline','rect','arrow','note','bookmark'}: raise ValueError('Geçersiz işaretleme türü.')
+        if kind not in {'ink','highlight','underline','rect','arrow','note','bookmark'}: raise ValueError(_t('Geçersiz işaretleme türü.'))
         data=json.loads(json.dumps(data,allow_nan=False))
         color=data.get('color','#e5ab42')
-        if not isinstance(color,str) or len(color)!=7 or color[0]!='#': raise ValueError('Renk #RRGGBB olmalı.')
+        if not isinstance(color,str) or len(color)!=7 or color[0]!='#': raise ValueError(_t('Renk #RRGGBB olmalı.'))
         try: int(color[1:],16)
-        except ValueError: raise ValueError('Geçersiz renk.')
+        except ValueError: raise ValueError(_t('Geçersiz renk.'))
         data['color']=color
         width=float(data.get('width',2))
-        if not math.isfinite(width) or not .5<=width<=24: raise ValueError('Kalınlık 0.5–24 olmalı.')
+        if not math.isfinite(width) or not .5<=width<=24: raise ValueError(_t('Kalınlık 0.5–24 olmalı.'))
         data['width']=width; data['text']=str(data.get('text',''))[:12000]
         # Public coordinates are displayed page points. Store unrotated PDF points.
         with fitz.open(self.path(doc_id)) as doc:
             p=doc[page-1]; matrix=p.derotation_matrix
             def point(v):
-                if len(v)!=2 or not all(math.isfinite(float(n)) for n in v): raise ValueError('Geçersiz nokta.')
+                if len(v)!=2 or not all(math.isfinite(float(n)) for n in v): raise ValueError(_t('Geçersiz nokta.'))
                 x,y=map(float,v)
-                if not 0<=x<=p.rect.width or not 0<=y<=p.rect.height: raise ValueError('Nokta sayfa dışında.')
+                if not 0<=x<=p.rect.width or not 0<=y<=p.rect.height: raise ValueError(_t('Nokta sayfa dışında.'))
                 return list(fitz.Point(x,y)*matrix)
             if kind=='ink':
                 pts=data.get('points',[])
-                if not 2<=len(pts)<=20000: raise ValueError('Çizim 2–20000 nokta içermeli.')
+                if not 2<=len(pts)<=20000: raise ValueError(_t('Çizim 2–20000 nokta içermeli.'))
                 data['points']=[point(v) for v in pts]
             elif kind in {'highlight','underline','rect'}:
                 rects=data.get('rects',[])
-                if not 1<=len(rects)<=1000: raise ValueError('Dikdörtgen gerekli.')
+                if not 1<=len(rects)<=1000: raise ValueError(_t('Dikdörtgen gerekli.'))
                 transformed=[]
                 for r in rects:
-                    if len(r)!=4: raise ValueError('Dikdörtgen dört sayı içermeli.')
+                    if len(r)!=4: raise ValueError(_t('Dikdörtgen dört sayı içermeli.'))
                     point(r[:2]); point(r[2:])
                     rr=fitz.Rect(r)
-                    if rr.is_empty: raise ValueError('Boş dikdörtgen.')
+                    if rr.is_empty: raise ValueError(_t('Boş dikdörtgen.'))
                     if kind in {'highlight','underline'}:
                         transformed.append([list(q*matrix) for q in (rr.tl,rr.tr,rr.bl,rr.br)])
                     else: transformed.append(list(rr*matrix))
                 data['quads' if kind in {'highlight','underline'} else 'rects']=transformed
             elif kind=='arrow':
                 pts=data.get('points',[])
-                if len(pts)!=2: raise ValueError('Ok için iki nokta gerekli.')
+                if len(pts)!=2: raise ValueError(_t('Ok için iki nokta gerekli.'))
                 data['points']=[point(v) for v in pts]
             else:
                 data['point']=point(data.get('point',[24,24]))
@@ -597,7 +598,7 @@ class Library:
         self.document(doc_id); text=str(text)[:12000]
         with self.db() as db:
             row=db.execute('SELECT * FROM annotations WHERE id=? AND doc_id=?',(annotation_id,doc_id)).fetchone()
-            if not row: raise ValueError('İşaretleme bulunamadı.')
+            if not row: raise ValueError(_t('İşaretleme bulunamadı.'))
             before={**dict(row),'data':json.loads(row['data'])}; after={**before,'data':{**before['data'],'text':text}}
             self._put_annotation(db,after); self._history(db,doc_id,before,after)
         return after
@@ -605,7 +606,7 @@ class Library:
     def delete_annotation(self,doc_id,annotation_id):
         with self.db() as db:
             row=db.execute('SELECT * FROM annotations WHERE id=? AND doc_id=?',(annotation_id,doc_id)).fetchone()
-            if not row: raise ValueError('İşaretleme bulunamadı.')
+            if not row: raise ValueError(_t('İşaretleme bulunamadı.'))
             old={**dict(row),'data':json.loads(row['data'])}
             db.execute('DELETE FROM annotations WHERE id=?',(annotation_id,))
             self._history(db,doc_id,old,None)
@@ -673,12 +674,12 @@ class Library:
     @pdf_locked
     def export_pdf(self,doc_id,pages=None,rotation=0):
         d=self.document(doc_id)
-        if rotation not in (0,90,180,270): raise ValueError('Döndürme 0,90,180,270 olmalı.')
+        if rotation not in (0,90,180,270): raise ValueError(_t('Döndürme 0,90,180,270 olmalı.'))
         if pages is None: pages=list(range(1,d['pages']+1))
-        if not pages or len(pages)>10000: raise ValueError('Geçersiz sayfa listesi.')
+        if not pages or len(pages)>10000: raise ValueError(_t('Geçersiz sayfa listesi.'))
         # Sayfa başına ayrı SQLite sorgusu yerine tek belge kaydıyla doğrula (200 sayfa: 1,5 s → 0).
         if any(isinstance(n,bool) or not isinstance(n,int) or not 1<=n<=d['pages'] for n in pages):
-            raise ValueError(f"Sayfa 1–{d['pages']} arasında olmalı.")
+            raise ValueError(_t("Sayfa 1–{n} arasında olmalı.",n=d['pages']))
         with fitz.open(self.path(doc_id)) as doc:
             for a in self.annotations(doc_id): self._apply(doc[a['page']-1],a)
             # select also supports reorder/repeated pages and preserves annotations.
@@ -689,7 +690,7 @@ class Library:
 
     @pdf_locked
     def merge(self,doc_ids):
-        if not 2<=len(doc_ids)<=30: raise ValueError('2–30 belge seçin.')
+        if not 2<=len(doc_ids)<=30: raise ValueError(_t('2–30 belge seçin.'))
         with fitz.open() as result:
             for doc_id in doc_ids:
                 with fitz.open(self.path(doc_id)) as doc:
@@ -709,16 +710,16 @@ class Library:
 
     def export_notes(self,doc_id):
         d=self.document(doc_id)
-        lines=['# '+d['title'],'',f"Belge kimliği: {doc_id}",'']
+        lines=['# '+d['title'],'',_t("Belge kimliği: {kimlik}",kimlik=doc_id),'']
         for a in self.annotations(doc_id):
-            lines.extend([f"## Sayfa {a['page']} · {a['kind']}",a['data'].get('text') or '(Çizim / işaretleme)', ''])
+            lines.extend([_t("## Sayfa {sayfa} · {tur}",sayfa=a['page'],tur=a['kind']),a['data'].get('text') or _t('(Çizim / işaretleme)'), ''])
         return {'path':str(self._write_export('\n'.join(lines).encode('utf-8'),'.md'))}
 
     @pdf_locked
     def ocr(self,doc_id,start=1,end=0,language='tur+eng'):
         d=self.check_page(doc_id,start); end=end or start; self.check_page(doc_id,end)
-        if end<start or end-start>19: raise ValueError('OCR için en fazla 20 sayfa seçin.')
-        if not language or any(c not in 'abcdefghijklmnopqrstuvwxyz_+' for c in language): raise ValueError('Geçersiz OCR dili.')
+        if end<start or end-start>19: raise ValueError(_t('OCR için en fazla 20 sayfa seçin.'))
+        if not language or any(c not in 'abcdefghijklmnopqrstuvwxyz_+' for c in language): raise ValueError(_t('Geçersiz OCR dili.'))
         rows=[]
         with fitz.open(self.path(doc_id)) as doc:
             for i in range(start-1,end):
@@ -731,7 +732,7 @@ class Library:
                 db.execute('DELETE FROM search_index WHERE doc_id=? AND page=?',row[:2])
                 db.execute('INSERT INTO search_index(doc_id,page,text) VALUES(?,?,?)',row[:3])
             self._log(db,'ocr',doc_id)
-        return {'pages':len(rows),'message':'OCR metni arama ve metin seçimi için kaydedildi; PDF dosyası değişmedi.'}
+        return {'pages':len(rows),'message':_t('OCR metni arama ve metin seçimi için kaydedildi; PDF dosyası değişmedi.')}
 
     def queue_open(self,doc_id,page=1):
         self.check_page(doc_id,page)
@@ -754,9 +755,9 @@ class Library:
         Eski klasöre dokunmaz; yeni yol bir sonraki açılışta geçerlidir. Dönüş: yeni kök."""
         import shutil
         new_root=Path(new_root).expanduser().resolve()
-        if new_root==self.root: raise ValueError('Zaten bu klasörde.')
-        if new_root.is_relative_to(self.root) or self.root.is_relative_to(new_root): raise ValueError('Yeni klasör eskisinin içinde ya da dışında iç içe olamaz.')
-        if new_root.exists() and any(new_root.iterdir()): raise ValueError('Hedef klasör boş olmalı.')
+        if new_root==self.root: raise ValueError(_t('Zaten bu klasörde.'))
+        if new_root.is_relative_to(self.root) or self.root.is_relative_to(new_root): raise ValueError(_t('Yeni klasör eskisinin içinde ya da dışında iç içe olamaz.'))
+        if new_root.exists() and any(new_root.iterdir()): raise ValueError(_t('Hedef klasör boş olmalı.'))
         new_root.mkdir(parents=True,exist_ok=True)
         with closing(sqlite3.connect(new_root/'library.sqlite3')) as dst: self._connection().backup(dst)
         for sub in ('originals','covers','exports','imports'):
@@ -768,7 +769,7 @@ class Library:
         with closing(sqlite3.connect(new_root/'library.sqlite3')) as db:
             ids=[r[0] for r in db.execute('SELECT id FROM documents')]; n_old=self.list_documents(limit=1000,archived=False)
         missing=[i for i in ids if not (new_root/'originals'/(i+'.pdf')).exists()]
-        if missing: raise ValueError(f'Kopya eksik: {len(missing)} PDF taşınamadı, işaretçi değiştirilmedi.')
+        if missing: raise ValueError(_t('Kopya eksik: {n} PDF taşınamadı, işaretçi değiştirilmedi.',n=len(missing)))
         set_default_data_dir(new_root); return new_root
 
     def backup(self):
@@ -825,7 +826,7 @@ class Library:
         return data
 
     def request_reader(self, action, doc_id=None, page=1):
-        if action not in ('open','library','close'): raise ValueError('Geçersiz okuyucu işlemi.')
+        if action not in ('open','library','close'): raise ValueError(_t('Geçersiz okuyucu işlemi.'))
         if action=='open': self.check_page(doc_id,page)
         key=uuid.uuid4().hex
         with self.db() as db:
@@ -844,15 +845,15 @@ class Library:
         with self.db() as db:
             db.execute("UPDATE reader_commands SET status='expired' WHERE id=? AND status='pending' AND created<?",(key,time.time()-30))
             row=db.execute('SELECT * FROM reader_commands WHERE id=?',(key,)).fetchone()
-        if not row: raise ValueError('Okuyucu isteği bulunamadı.')
+        if not row: raise ValueError(_t('Okuyucu isteği bulunamadı.'))
         return {'request_id':key,'status':row['status'],**json.loads(row['result'])}
 
     def read_chunk(self, doc_id, page=1, offset=0, max_chars=3000):
         doc=self.check_page(doc_id,page)
-        if offset<0: raise ValueError('Metin konumu negatif olamaz.')
+        if offset<0: raise ValueError(_t('Metin konumu negatif olamaz.'))
         with self.db() as db: row=db.execute('SELECT text FROM page_text WHERE doc_id=? AND page=?',(doc_id,page)).fetchone()
         body=row['text'] if row else ''
-        if offset>len(body): raise ValueError('Metin konumu sayfa uzunluğunu aşıyor.')
+        if offset>len(body): raise ValueError(_t('Metin konumu sayfa uzunluğunu aşıyor.'))
         end=min(len(body),offset+max(100,min(int(max_chars),3000)))
         next_=({'page':page,'offset':end} if end<len(body) else {'page':page+1,'offset':0} if page<doc['pages'] else None)
         return {'document_id':doc_id,'title':doc['title'][:200],'page':page,'offset':offset,'text':body[offset:end],
@@ -861,10 +862,10 @@ class Library:
     @pdf_locked
     def highlight_text(self,doc_id,page,text,color='#e5ab42'):
         self.check_page(doc_id,page)
-        if not text.strip() or len(text)>5000: raise ValueError('Alıntı 1–5000 karakter olmalı.')
+        if not text.strip() or len(text)>5000: raise ValueError(_t('Alıntı 1–5000 karakter olmalı.'))
         with fitz.open(self.path(doc_id)) as doc:
             p=doc[page-1]; matches=p.search_for(text,quads=True)
-            if not matches: raise ValueError('Alıntı PDF metin katmanında bulunamadı. OCR sayfasında okuyucunun fosfor aracını kullan.')
+            if not matches: raise ValueError(_t('Alıntı PDF metin katmanında bulunamadı. OCR sayfasında okuyucunun fosfor aracını kullan.'))
             rects=[list(q.rect*p.rotation_matrix) for q in matches[:1000]]
         return self.add_annotation(doc_id,page,'highlight',{'rects':rects,'text':text,'color':color})
 
@@ -921,7 +922,7 @@ class RenderProcess:
                 try:
                     self.proc.stdin.write((json.dumps({'id':self.seq,'path':str(path),'page':page,'scale':scale,'annotations':list(annotations),'alpha':bool(alpha)})+'\n').encode('utf-8')); self.proc.stdin.flush()
                     header=self.proc.stdout.readline()
-                    if not header: raise BrokenPipeError('üretim süreci yanıt vermedi')
+                    if not header: raise BrokenPipeError(_t('üretim süreci yanıt vermedi'))
                     h=json.loads(header)
                     if 'error' in h: raise ValueError(h['error'])
                     data=self.proc.stdout.read(h['n'])

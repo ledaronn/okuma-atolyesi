@@ -23,7 +23,8 @@ Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
 > tables, images, page layout, headers/footers, PDF export, printing) and opens a document in
 > LibreOffice when you need full Word features. It can register as an "Open with" app for `.pdf`
 > and `.docx`, and an optional MCP server lets AI assistants read your library. No account or
-> internet connection is needed after setup. The interface is in Turkish.
+> internet connection is needed after setup. The interface is available in **English and Turkish**: it follows
+> the Windows display language and can be switched in **Tools ▾ → Dil / Language**.
 >
 > **Download (Windows):** [latest release](https://github.com/ledaronn/okuma-atolyesi/releases/latest), run
 > `OkumaAtolyesi-Setup-<version>.exe`; no Python needed. From source: install Python 3.11+,
@@ -95,7 +96,13 @@ Linux'ta Qt masaüstü çalışma zamanı gereklidir. Ekransız sunucuda normal 
 Sıfırdan `.docx` yaz: yazı tipi/boyut/renk/vurgu, kalın-italik-altı/üstü çizili, üst/alt simge,
 başlık stilleri, hizalama, satır aralığı, madde/numara listeleri ve girinti, tablo (satır/sütun
 ekle-sil), resim, sayfa sonu, kenar boşlukları, kâğıt boyutu ve yönü, üst/alt bilgi ve sayfa
-numarası, bul-değiştir, kelime/sayfa sayısı, **PDF olarak dışa aktar**, yazdır.
+numarası, bul-değiştir, kes/kopyala/yapıştır, kelime/sayfa sayısı, **PDF olarak dışa aktar**, yazdır.
+
+Arayüz Word'e benzer: Dosya / Giriş / Ekle / Düzen sekmelerinde adlandırılmış gruplar (Pano, Yazı tipi,
+Paragraf, Stiller…), ikonlu düğmeler, kısayollu ipuçları ve sağ üstte hızlı erişim (Kaydet, Geri al, Yinele).
+Kalın/italik/hizalama düğmeleri imlecin bulunduğu yerin biçimini gösterir.
+
+![Belge editörü](onizleme/belge_editoru.png)
 
 İzlenen değişiklik, yorum, dipnot, içindekiler gibi tam Word özellikleri için **Dosya → LibreOffice'te
 aç** (LibreOffice kurulu olmalı). Word'de yazılmış bir dosyada editörün taşıyamadığı içerik varsa

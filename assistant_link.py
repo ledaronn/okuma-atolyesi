@@ -7,9 +7,10 @@ import time
 import uuid
 from contextlib import contextmanager
 from pathlib import Path
+from ceviri import t as _t
 
-TASKS={'explain':'Bu bölümü anlaşılır biçimde açıkla.','summarize':'Bu bölümü kısa ve anlaşılır biçimde özetle.',
-       'translate':'Bu bölümü Türkçeye çevir.','questions':'Bu bölümden cevaplarıyla beş çalışma sorusu hazırla.',
+TASKS={'explain':_t('Bu bölümü anlaşılır biçimde açıkla.'),'summarize':_t('Bu bölümü kısa ve anlaşılır biçimde özetle.'),
+       'translate':_t('Bu bölümü Türkçeye çevir.'),'questions':_t('Bu bölümden cevaplarıyla beş çalışma sorusu hazırla.'),
        'save_note':'Smart Notes’a kaydet'}
 
 def link_path():
@@ -37,9 +38,9 @@ class AssistantLink:
         return {'connected':bool(row and time.time()-row['updated']<8),'projects':json.loads(row['projects']) if row else []}
 
     def send(self, task, document_id, page, title, text, workspace_id=None):
-        if task not in TASKS: raise ValueError('Bilinmeyen asistan işlemi.')
-        if not self.peer()['connected']: raise ValueError('Limina bağlantısı yok. Limina’yı açıp yeniden dene.')
-        if len(text)>12000: raise ValueError('Seçim çok uzun; en fazla 12.000 karakter seç.')
+        if task not in TASKS: raise ValueError(_t('Bilinmeyen asistan işlemi.'))
+        if not self.peer()['connected']: raise ValueError(_t('Limina bağlantısı yok. Limina’yı açıp yeniden dene.'))
+        if len(text)>12000: raise ValueError(_t('Seçim çok uzun; en fazla 12.000 karakter seç.'))
         payload={'task':task,'library':self.library,'document_id':document_id,'page':page,'title':title[:200],
                  'text':text,'workspace_id':workspace_id,'source':f'okuma://{self.library}/{document_id}/{page}'}
         key=uuid.uuid4().hex; now=time.time()

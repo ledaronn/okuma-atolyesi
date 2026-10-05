@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import sys
 from pathlib import Path
+from ceviri import t as _t
 
 KOK_DIZIN = Path(__file__).resolve().parent.parent
 UYGULAMA = "Okuma Atölyesi"
@@ -37,7 +38,7 @@ def komut() -> str:
 
 def _winreg():
     if sys.platform != "win32":
-        raise OSError("Dosya ilişkilendirmesi yalnızca Windows'ta.")
+        raise OSError(_t("Dosya ilişkilendirmesi yalnızca Windows'ta."))
     import winreg
     return winreg
 

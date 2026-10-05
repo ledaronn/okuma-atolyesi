@@ -19,24 +19,56 @@ import subprocess
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import QMarginsF, QPointF, QRectF, QSizeF, Qt, QUrl
-from PySide6.QtGui import (QAction, QBrush, QColor, QFont, QFontDatabase, QIcon, QImage, QKeySequence, QPageLayout,
+from PySide6.QtCore import QMarginsF, QPointF, QRectF, QSize, QSizeF, Qt, QUrl
+from PySide6.QtGui import (QAction, QActionGroup, QBrush, QColor, QFont, QFontDatabase, QIcon, QImage, QKeySequence, QPageLayout,
                            QPageSize, QPainter, QPalette, QTextBlockFormat, QTextCharFormat, QTextCursor,
                            QTextDocument, QTextFormat, QTextImageFormat, QTextLength, QTextListFormat,
                            QTextTableFormat)
 from PySide6.QtPrintSupport import QPrintDialog, QPrinter
 from PySide6.QtWidgets import (QApplication, QCheckBox, QColorDialog, QComboBox, QDialog, QDialogButtonBox,
-                               QDoubleSpinBox, QFileDialog, QFontComboBox, QFormLayout, QHBoxLayout, QLabel,
+                               QDoubleSpinBox, QFileDialog, QFontComboBox, QFormLayout, QGridLayout, QHBoxLayout, QLabel,
                                QLineEdit, QMainWindow, QMessageBox, QPushButton, QSpinBox, QTabWidget, QTextEdit,
-                               QToolBar, QVBoxLayout, QWidget)
+                               QSizePolicy, QToolBar, QToolButton, QVBoxLayout, QWidget)
 
 from belge import docx_io
 from belge.docx_io import MM_PX, SayfaAyari
+from belge.ikonlar import ikon
+from ceviri import t as _t
 
 SAYFA_ARASI = 24          # sayfalar arasindaki gri bosluk (px) — yalnizca gorunumde
 KAGIT = {"A4": (210, 297), "A5": (148, 210), "Letter": (215.9, 279.4)}
 KENAR = {"Normal (2,5 cm)": 25.0, "Dar (1,27 cm)": 12.7, "Geniş (3,8 cm)": 38.1}
-STILLER = ["Normal", "Belge başlığı", "Başlık 1", "Başlık 2", "Başlık 3"]
+# Serit: okuyucuyla ayni renk dili (sicak kagit zemin, koyu yesil murekkep).
+SERIT_STILI = """
+QMainWindow { background: #efece5; }
+QTabWidget#serit::pane { border: 0; border-top: 1px solid #d9d4c7; border-bottom: 1px solid #d9d4c7; background: #fbfaf7; }
+QTabWidget#serit > QTabBar { background: #efece5; }
+QTabWidget#serit > QTabBar::tab { background: transparent; color: #4a5a52; border: 0; padding: 7px 18px 6px 18px;
+    margin: 4px 1px 0 1px; font-size: 13px; }
+QTabWidget#serit > QTabBar::tab:hover:!selected { color: #1f2d26; background: #e4e0d6; border-radius: 6px; }
+QTabWidget#serit > QTabBar::tab:selected { color: #1f2d26; background: #fbfaf7; font-weight: 600;
+    border: 1px solid #d9d4c7; border-bottom: 2px solid #2f433a; border-top-left-radius: 6px; border-top-right-radius: 6px; }
+QWidget#seritSayfa { background: #fbfaf7; }
+QWidget#grup { border-right: 1px solid #e3ded3; }
+QWidget#seritSayfa QLabel { color: #1f2d26; }
+QWidget#seritSayfa QLabel#grupAdi { color: #8a867c; font-size: 11px; }
+QToolButton { color: #1f2d26; border: 1px solid transparent; border-radius: 5px; padding: 2px 3px; background: transparent; }
+QToolButton#buyuk { padding: 2px 4px 4px 4px; font-size: 12px; }
+QToolButton:hover { background: #e7eee8; border-color: #cddbd1; }
+QToolButton:pressed { background: #cfe0d4; }
+QToolButton:checked { background: #d6e5da; border-color: #9fbaa7; }
+QComboBox, QFontComboBox { background: #ffffff; color: #1f2d26; border: 1px solid #d3cec2; border-radius: 4px;
+    padding: 2px 6px; min-height: 20px; }
+QComboBox:hover, QFontComboBox:hover { border-color: #9fbaa7; }
+QAbstractItemView { background: #ffffff; color: #1f2d26; selection-background-color: #d6e5da; selection-color: #1f2d26; }
+QToolTip { background: #fbfaf7; color: #1f2d26; border: 1px solid #d3cec2; padding: 4px 6px; }
+QMenu { background: #fbfaf7; color: #1f2d26; border: 1px solid #d3cec2; }
+QMenu::item:selected { background: #d6e5da; }
+QStatusBar { background: #efece5; color: #5b5a55; border-top: 1px solid #d9d4c7; }
+QStatusBar QLabel { color: #5b5a55; padding: 0 8px; }
+"""
+
+STILLER = ["Normal", _t("Belge başlığı"), _t("Başlık 1"), _t("Başlık 2"), _t("Başlık 3")]
 
 
 def soffice_yolu() -> str | None:
@@ -211,15 +243,15 @@ def _resim_adlari(belge: QTextDocument) -> set[str]:
 class BulDegistir(QDialog):
     def __init__(self, editor: "BelgeEditoru"):
         super().__init__(editor)
-        self.setWindowTitle("Bul ve değiştir")
+        self.setWindowTitle(_t("Bul ve değiştir"))
         self.e = editor
         form = QFormLayout(self)
         self.bul = QLineEdit(); self.yeni = QLineEdit()
-        self.harf = QCheckBox("Büyük/küçük harf duyarlı"); self.kelime = QCheckBox("Tam kelime")
-        form.addRow("Bul:", self.bul); form.addRow("Değiştir:", self.yeni)
+        self.harf = QCheckBox(_t("Büyük/küçük harf duyarlı")); self.kelime = QCheckBox(_t("Tam kelime"))
+        form.addRow(_t("Bul:"), self.bul); form.addRow(_t("Değiştir:"), self.yeni)
         form.addRow(self.harf); form.addRow(self.kelime)
         satir = QHBoxLayout()
-        for ad, f in (("Sonrakini bul", self.sonraki), ("Değiştir", self.degistir), ("Tümünü değiştir", self.tumu)):
+        for ad, f in ((_t("Sonrakini bul"), self.sonraki), (_t("Değiştir"), self.degistir), (_t("Tümünü değiştir"), self.tumu)):
             b = QPushButton(ad); b.clicked.connect(f); satir.addWidget(b)
         form.addRow(satir)
         self.durum = QLabel(""); form.addRow(self.durum)
@@ -242,7 +274,7 @@ class BulDegistir(QDialog):
             return True
         g.moveCursor(QTextCursor.Start)                 # basa sar
         bulundu = g.find(metin, self._bayrak())
-        self.durum.setText("" if bulundu else "Bulunamadı.")
+        self.durum.setText("" if bulundu else _t("Bulunamadı."))
         return bulundu
 
     def degistir(self) -> None:
@@ -261,17 +293,17 @@ class BulDegistir(QDialog):
             bul.insertText(self.yeni.text()); n += 1
             bul = belge.find(self.bul.text(), bul.position(), self._bayrak())
         c.endEditBlock()
-        self.durum.setText(f"{n} yer değiştirildi.")
+        self.durum.setText(_t("{n} yer değiştirildi.", n=n))
 
 
 class UstAltBilgi(QDialog):
     def __init__(self, ayar: SayfaAyari, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Üst ve alt bilgi")
+        self.setWindowTitle(_t("Üst ve alt bilgi"))
         form = QFormLayout(self)
         self.ust = QLineEdit(ayar.ust_bilgi); self.alt = QLineEdit(ayar.alt_bilgi)
-        self.no = QCheckBox("Alt bilgide sayfa numarası"); self.no.setChecked(ayar.sayfa_no)
-        form.addRow("Üst bilgi:", self.ust); form.addRow("Alt bilgi:", self.alt); form.addRow(self.no)
+        self.no = QCheckBox(_t("Alt bilgide sayfa numarası")); self.no.setChecked(ayar.sayfa_no)
+        form.addRow(_t("Üst bilgi:"), self.ust); form.addRow(_t("Alt bilgi:"), self.alt); form.addRow(self.no)
         dug = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         dug.accepted.connect(self.accept); dug.rejected.connect(self.reject); form.addRow(dug)
 
@@ -279,13 +311,13 @@ class UstAltBilgi(QDialog):
 class KenarBosluklari(QDialog):
     def __init__(self, ayar: SayfaAyari, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Özel kenar boşlukları (mm)")
+        self.setWindowTitle(_t("Özel kenar boşlukları (mm)"))
         form = QFormLayout(self)
         self.alanlar = {}
         for ad, deger in (("ust", ayar.ust), ("alt", ayar.alt), ("sol", ayar.sol), ("sag", ayar.sag)):
             s = QDoubleSpinBox(); s.setRange(0, 100); s.setDecimals(1); s.setValue(deger)
             self.alanlar[ad] = s
-            form.addRow({"ust": "Üst", "alt": "Alt", "sol": "Sol", "sag": "Sağ"}[ad] + ":", s)
+            form.addRow({"ust": _t("Üst"), "alt": _t("Alt"), "sol": _t("Sol"), "sag": _t("Sağ")}[ad] + ":", s)
         dug = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         dug.accepted.connect(self.accept); dug.rejected.connect(self.reject); form.addRow(dug)
 
@@ -314,107 +346,189 @@ class BelgeEditoru(QMainWindow):
     # ---------------- iskelet ----------------
     def _govde(self) -> QWidget:
         w = QWidget(); v = QVBoxLayout(w); v.setContentsMargins(0, 0, 0, 0); v.setSpacing(0)
-        self.serit = QTabWidget(); self.serit.setDocumentMode(True); self.serit.setMaximumHeight(92)
+        self.serit = QTabWidget(); self.serit.setObjectName("serit"); self.serit.setDocumentMode(True)
+        self.serit.setFixedHeight(132)
         v.addWidget(self.serit)
         self.uyari = QWidget(); u = QHBoxLayout(self.uyari); u.setContentsMargins(12, 6, 12, 6)
         self.uyari.setStyleSheet("background:#fff4d6; color:#5c4400;")
         self.uyari_metin = QLabel(); self.uyari_metin.setWordWrap(True)
-        lo = QPushButton("LibreOffice'te aç"); lo.clicked.connect(self.libreoffice_ac)
+        lo = QPushButton(ikon("libreoffice"), _t("LibreOffice'te aç")); lo.clicked.connect(self.libreoffice_ac)
         u.addWidget(self.uyari_metin, 1); u.addWidget(lo)
         self.uyari.hide()
         v.addWidget(self.uyari)
         v.addWidget(self.gorunum, 1)
         return w
 
-    def _eylem(self, ad, f, kisayol=None, ipucu=None, denetlenir=False) -> QAction:
+    def _eylem(self, ad, f, kisayol=None, ipucu=None, denetlenir=False, simge=None) -> QAction:
         a = QAction(ad, self)
         a.triggered.connect(f)
+        if simge:
+            a.setIcon(ikon(simge) if isinstance(simge, str) else simge)
         if kisayol:
             a.setShortcut(QKeySequence(kisayol))
-        if ipucu:
-            a.setToolTip(ipucu)
+        # Ipucu kisayolu da gosterir (Word gibi): "Kalin (Ctrl+B)"
+        metin = (ipucu or ad).replace("…", "")
+        if kisayol:
+            metin += f"  ({QKeySequence(kisayol).toString(QKeySequence.NativeText)})"
+        a.setToolTip(metin)
         a.setCheckable(denetlenir)
         self.addAction(a)
         return a
 
-    def _sekme(self, ad: str) -> QToolBar:
-        t = QToolBar(ad); t.setMovable(False)
-        t.setToolButtonStyle(Qt.ToolButtonTextOnly)
-        self.serit.addTab(t, ad)
-        return t
+    # ---------------- serit (Word benzeri: sekme > grup > dugme) ----------------
+    def _sekme(self, ad: str) -> QHBoxLayout:
+        sayfa = QWidget(); sayfa.setObjectName("seritSayfa")
+        h = QHBoxLayout(sayfa); h.setContentsMargins(6, 4, 6, 2); h.setSpacing(0)
+        self.serit.addTab(sayfa, ad)
+        return h
+
+    def _grup(self, sekme: QHBoxLayout, ad: str) -> QGridLayout:
+        """Adli grup: icerik ustte, grup adi altta, sagda ince ayrac."""
+        kutu = QWidget(); kutu.setObjectName("grup")
+        v = QVBoxLayout(kutu); v.setContentsMargins(6, 0, 8, 0); v.setSpacing(2)
+        icerik = QGridLayout(); icerik.setContentsMargins(0, 0, 0, 0); icerik.setHorizontalSpacing(2); icerik.setVerticalSpacing(3)
+        v.addLayout(icerik, 1)
+        etiket = QLabel(ad); etiket.setObjectName("grupAdi"); etiket.setAlignment(Qt.AlignCenter)
+        v.addWidget(etiket)
+        sekme.addWidget(kutu)
+        return icerik
+
+    def _buyuk(self, eylem: QAction) -> QToolButton:
+        """Ikon ustte, metin altta (Word'deki buyuk dugme)."""
+        b = QToolButton(); b.setDefaultAction(eylem); b.setObjectName("buyuk")
+        b.setToolButtonStyle(Qt.ToolButtonTextUnderIcon); b.setIconSize(QSize(32, 32))
+        b.setMinimumWidth(58); b.setSizePolicy(QSizePolicy.Preferred, QSizePolicy.Expanding)
+        return b
+
+    def _kucuk(self, eylem: QAction, metinli=False) -> QToolButton:
+        b = QToolButton(); b.setDefaultAction(eylem); b.setIconSize(QSize(20, 20)); b.setAutoRaise(True)
+        b.setToolButtonStyle(Qt.ToolButtonTextBesideIcon if metinli else Qt.ToolButtonIconOnly)
+        return b
 
     def _serit(self) -> None:
-        d = self._sekme("Dosya")
-        for ad, f, k in (("Yeni", self.yeni, "Ctrl+N"), ("Aç…", self.ac_diyalog, "Ctrl+O"),
-                         ("Kaydet", self.kaydet, "Ctrl+S"), ("Farklı kaydet…", self.farkli_kaydet, "Ctrl+Shift+S")):
-            d.addAction(self._eylem(ad, f, k))
-        d.addSeparator()
-        d.addAction(self._eylem("PDF olarak dışa aktar…", self.pdf_aktar))
-        d.addAction(self._eylem("Yazdır…", self.yazdir, "Ctrl+P"))
-        d.addSeparator()
-        d.addAction(self._eylem("LibreOffice'te aç", self.libreoffice_ac,
-                                ipucu="Tam Word gücü: izlenen değişiklikler, yorumlar, dipnot, içindekiler…"))
+        dil_harf = {"K": _t("K"), "İ": _t("İ"), "A": _t("A"), "Ü": _t("Ü")}
 
-        g = self._sekme("Giriş")
-        g.addAction(self._eylem("Geri al", lambda: self.gorunum.undo(), "Ctrl+Z"))
-        g.addAction(self._eylem("Yinele", lambda: self.gorunum.redo(), "Ctrl+Y"))
-        g.addSeparator()
-        self.stil = QComboBox(); self.stil.addItems(STILLER); self.stil.activated.connect(self.stil_uygula)
-        g.addWidget(self.stil)
-        self.yazi = QFontComboBox(); self.yazi.currentFontChanged.connect(lambda f: self._bicim(lambda c: c.setFontFamilies([f.family()])))
-        g.addWidget(self.yazi)
-        self.boyut = QComboBox(); self.boyut.setEditable(True)
+        # ---- Dosya ----
+        d = self._sekme(_t("Dosya"))
+        g = self._grup(d, _t("Belge"))
+        for i, (ad, f, k, s) in enumerate(((_t("Yeni"), self.yeni, "Ctrl+N", "yeni"),
+                                           (_t("Aç…"), self.ac_diyalog, "Ctrl+O", "ac"),
+                                           (_t("Kaydet"), self.kaydet, "Ctrl+S", "kaydet"),
+                                           (_t("Farklı kaydet…"), self.farkli_kaydet, "Ctrl+Shift+S", "farkli_kaydet"))):
+            g.addWidget(self._buyuk(self._eylem(ad, f, k, simge=s)), 0, i)
+        g = self._grup(d, _t("Paylaş"))
+        g.addWidget(self._buyuk(self._eylem(_t("PDF olarak dışa aktar…"), self.pdf_aktar, simge="pdf")), 0, 0)
+        g.addWidget(self._buyuk(self._eylem(_t("Yazdır…"), self.yazdir, "Ctrl+P", simge="yazdir")), 0, 1)
+        g = self._grup(d, "LibreOffice")
+        g.addWidget(self._buyuk(self._eylem(_t("LibreOffice'te aç"), self.libreoffice_ac, simge="libreoffice",
+                                            ipucu=_t("Tam Word gücü: izlenen değişiklikler, yorumlar, dipnot, içindekiler…"))), 0, 0)
+        d.addStretch(1)
+
+        # ---- Giris ----
+        h = self._sekme(_t("Giriş"))
+        g = self._grup(h, _t("Pano"))
+        g.addWidget(self._buyuk(self._eylem(_t("Yapıştır"), lambda: self.gorunum.paste(), simge="yapistir")), 0, 0, 2, 1)
+        g.addWidget(self._kucuk(self._eylem(_t("Kes"), lambda: self.gorunum.cut(), simge="kes"), True), 0, 1)
+        g.addWidget(self._kucuk(self._eylem(_t("Kopyala"), lambda: self.gorunum.copy(), simge="kopyala"), True), 1, 1)
+
+        g = self._grup(h, _t("Yazı tipi"))
+        self.yazi = QFontComboBox(); self.yazi.setFixedWidth(170)
+        self.yazi.currentFontChanged.connect(lambda f: self._bicim(lambda c: c.setFontFamilies([f.family()])))
+        self.boyut = QComboBox(); self.boyut.setEditable(True); self.boyut.setFixedWidth(58)
         self.boyut.addItems([str(s) for s in (8, 9, 10, 11, 12, 14, 16, 18, 20, 24, 28, 36, 48, 72)])
-        self.boyut.textActivated.connect(self._boyut_uygula)
-        g.addWidget(self.boyut)
-        self.kalin = self._eylem("K", self.kalin_yap, "Ctrl+B", "Kalın", True)
-        self.italik = self._eylem("İ", self.italik_yap, "Ctrl+I", "İtalik", True)
-        self.alti = self._eylem("A", self.alti_ciz, "Ctrl+U", "Altı çizili", True)
-        self.ustu = self._eylem("Ü", self.ustu_ciz, None, "Üstü çizili", True)
-        for a in (self.kalin, self.italik, self.alti, self.ustu):
-            g.addAction(a)
-        g.addAction(self._eylem("x²", lambda: self._simge(QTextCharFormat.AlignSuperScript), "Ctrl+Shift++", "Üst simge"))
-        g.addAction(self._eylem("x₂", lambda: self._simge(QTextCharFormat.AlignSubScript), "Ctrl+=", "Alt simge"))
-        g.addAction(self._eylem("Renk", self.renk_sec, None, "Yazı rengi"))
-        g.addAction(self._eylem("Vurgu", self.vurgu_sec, None, "Vurgu rengi"))
-        g.addAction(self._eylem("Temizle", self.bicimi_temizle, None, "Biçimi temizle"))
-        g.addSeparator()
-        for ad, hiza, k in (("Sola", Qt.AlignLeft, "Ctrl+L"), ("Ortala", Qt.AlignHCenter, "Ctrl+E"),
-                            ("Sağa", Qt.AlignRight, "Ctrl+R"), ("İki yana", Qt.AlignJustify, "Ctrl+J")):
-            g.addAction(self._eylem(ad, lambda _=False, h=hiza: self.gorunum.setAlignment(h), k))
-        g.addSeparator()
-        g.addAction(self._eylem("• Madde", lambda: self.liste(QTextListFormat.ListDisc)))
-        g.addAction(self._eylem("1. Numara", lambda: self.liste(QTextListFormat.ListDecimal)))
-        g.addAction(self._eylem("Girinti −", lambda: self.girinti(-1)))
-        g.addAction(self._eylem("Girinti +", lambda: self.girinti(1)))
-        self.aralik = QComboBox(); self.aralik.addItems(["1,0", "1,15", "1,5", "2,0"])
-        self.aralik.setToolTip("Satır aralığı")
+        self.boyut.textActivated.connect(self._boyut_uygula); self.boyut.setToolTip(_t("Yazı boyutu"))
+        satir1 = QHBoxLayout(); satir1.setSpacing(3); satir1.addWidget(self.yazi); satir1.addWidget(self.boyut); satir1.addStretch(1)
+        g.addLayout(satir1, 0, 0)
+        self.kalin = self._eylem(_t("Kalın"), self.kalin_yap, "Ctrl+B", None, True, ikon("kalin", harf=dil_harf["K"]))
+        self.italik = self._eylem(_t("İtalik"), self.italik_yap, "Ctrl+I", None, True, ikon("italik", harf=dil_harf["İ"]))
+        self.alti = self._eylem(_t("Altı çizili"), self.alti_ciz, "Ctrl+U", None, True, ikon("alti_ciz", harf=dil_harf["A"]))
+        self.ustu = self._eylem(_t("Üstü çizili"), self.ustu_ciz, None, None, True, ikon("ustu_ciz", harf=dil_harf["Ü"]))
+        self.renk_eylem = self._eylem(_t("Yazı rengi"), self.renk_sec, simge=ikon("yazi_rengi", "#c00000"))
+        self.vurgu_eylem = self._eylem(_t("Vurgu rengi"), self.vurgu_sec, simge=ikon("vurgu", "#ffe84d"))
+        satir2 = QHBoxLayout(); satir2.setSpacing(1)
+        for a in (self.kalin, self.italik, self.alti, self.ustu,
+                  self._eylem(_t("Üst simge"), lambda: self._simge(QTextCharFormat.AlignSuperScript), "Ctrl+Shift++", simge="ust_simge"),
+                  self._eylem(_t("Alt simge"), lambda: self._simge(QTextCharFormat.AlignSubScript), "Ctrl+=", simge="alt_simge"),
+                  self.renk_eylem, self.vurgu_eylem,
+                  self._eylem(_t("Biçimi temizle"), self.bicimi_temizle, simge="bicimi_temizle")):
+            satir2.addWidget(self._kucuk(a))
+        satir2.addStretch(1)
+        g.addLayout(satir2, 1, 0)
+
+        g = self._grup(h, _t("Paragraf"))
+        p1 = QHBoxLayout(); p1.setSpacing(1)
+        for ad, f, s in ((_t("Madde işaretleri"), lambda: self.liste(QTextListFormat.ListDisc), "madde"),
+                         (_t("Numaralandırma"), lambda: self.liste(QTextListFormat.ListDecimal), "numara"),
+                         (_t("Girintiyi azalt"), lambda: self.girinti(-1), "girinti_azalt"),
+                         (_t("Girintiyi artır"), lambda: self.girinti(1), "girinti_artir")):
+            p1.addWidget(self._kucuk(self._eylem(ad, f, simge=s)))
+        self.aralik = QComboBox(); self.aralik.addItems([_t("1,0"), _t("1,15"), _t("1,5"), _t("2,0")])
+        self.aralik.setToolTip(_t("Satır aralığı")); self.aralik.setFixedWidth(62)
         self.aralik.activated.connect(lambda _: self.satir_araligi(float(self.aralik.currentText().replace(",", "."))))
-        g.addWidget(self.aralik)
-        g.addAction(self._eylem("Bul/Değiştir", self.bul_ac, "Ctrl+H"))
-        self._eylem("Bul", self.bul_ac, "Ctrl+F")
+        aralik_ikon = QLabel(); aralik_ikon.setPixmap(ikon("satir_araligi").pixmap(20, 20)); aralik_ikon.setToolTip(_t("Satır aralığı"))
+        p1.addSpacing(4); p1.addWidget(aralik_ikon); p1.addWidget(self.aralik); p1.addStretch(1)
+        g.addLayout(p1, 0, 0)
+        p2 = QHBoxLayout(); p2.setSpacing(1)
+        self.hizalar = QActionGroup(self); self.hizalar.setExclusive(True); self.hiza_eylem = {}
+        for ad, hiza, k, s in ((_t("Sola hizala"), Qt.AlignLeft, "Ctrl+L", "sola"), (_t("Ortala"), Qt.AlignHCenter, "Ctrl+E", "ortala"),
+                               (_t("Sağa hizala"), Qt.AlignRight, "Ctrl+R", "saga"), (_t("İki yana yasla"), Qt.AlignJustify, "Ctrl+J", "iki_yana")):
+            a = self._eylem(ad, lambda _=False, h=hiza: self.gorunum.setAlignment(h), k, None, True, s)
+            self.hizalar.addAction(a); self.hiza_eylem[int(hiza)] = a; p2.addWidget(self._kucuk(a))
+        p2.addStretch(1)
+        g.addLayout(p2, 1, 0)
 
-        e = self._sekme("Ekle")
-        e.addAction(self._eylem("Tablo…", self.tablo_ekle))
-        e.addAction(self._eylem("Satır ekle", lambda: self._tablo_islem("satir")))
-        e.addAction(self._eylem("Sütun ekle", lambda: self._tablo_islem("sutun")))
-        e.addAction(self._eylem("Satırı sil", lambda: self._tablo_islem("satir_sil")))
-        e.addAction(self._eylem("Sütunu sil", lambda: self._tablo_islem("sutun_sil")))
-        e.addSeparator()
-        e.addAction(self._eylem("Resim…", self.resim_ekle))
-        e.addAction(self._eylem("Sayfa sonu", self.sayfa_sonu, "Ctrl+Return"))
-        e.addSeparator()
-        e.addAction(self._eylem("Üst/alt bilgi…", self.ust_alt_bilgi))
-        self.no_eylem = self._eylem("Sayfa numarası", self.sayfa_no_degistir, None, None, True)
-        e.addAction(self.no_eylem)
+        g = self._grup(h, _t("Stiller"))
+        self.stil = QComboBox(); self.stil.addItems(STILLER); self.stil.setMinimumWidth(150)
+        self.stil.activated.connect(self.stil_uygula); self.stil.setToolTip(_t("Paragraf stili"))
+        stil_ikon = QLabel(); stil_ikon.setPixmap(ikon("stil").pixmap(28, 28))
+        g.addWidget(stil_ikon, 0, 0, Qt.AlignCenter); g.addWidget(self.stil, 1, 0)
 
-        z = self._sekme("Düzen")
-        self.kenar = QComboBox(); self.kenar.addItems(list(KENAR) + ["Özel…"]); self.kenar.setToolTip("Kenar boşlukları")
+        g = self._grup(h, _t("Düzenleme"))
+        g.addWidget(self._kucuk(self._eylem(_t("Bul"), self.bul_ac, "Ctrl+F", simge="bul"), True), 0, 0)
+        g.addWidget(self._kucuk(self._eylem(_t("Değiştir"), self.bul_ac, "Ctrl+H", simge="degistir"), True), 1, 0)
+        h.addStretch(1)
+
+        # ---- Ekle ----
+        e = self._sekme(_t("Ekle"))
+        g = self._grup(e, _t("Tablo"))
+        g.addWidget(self._buyuk(self._eylem(_t("Tablo…"), self.tablo_ekle, simge="tablo")), 0, 0, 2, 1)
+        g.addWidget(self._kucuk(self._eylem(_t("Satır ekle"), lambda: self._tablo_islem("satir"), simge="satir_ekle"), True), 0, 1)
+        g.addWidget(self._kucuk(self._eylem(_t("Sütun ekle"), lambda: self._tablo_islem("sutun"), simge="sutun_ekle"), True), 1, 1)
+        g.addWidget(self._kucuk(self._eylem(_t("Satırı sil"), lambda: self._tablo_islem("satir_sil"), simge="satir_sil"), True), 0, 2)
+        g.addWidget(self._kucuk(self._eylem(_t("Sütunu sil"), lambda: self._tablo_islem("sutun_sil"), simge="sutun_sil"), True), 1, 2)
+        g = self._grup(e, _t("Çizimler"))
+        g.addWidget(self._buyuk(self._eylem(_t("Resim…"), self.resim_ekle, simge="resim")), 0, 0)
+        g = self._grup(e, _t("Sayfalar"))
+        g.addWidget(self._buyuk(self._eylem(_t("Sayfa sonu"), self.sayfa_sonu, "Ctrl+Return", simge="sayfa_sonu")), 0, 0)
+        g = self._grup(e, _t("Üst ve alt bilgi"))
+        g.addWidget(self._buyuk(self._eylem(_t("Üst/alt bilgi…"), self.ust_alt_bilgi, simge="ust_alt_bilgi")), 0, 0)
+        self.no_eylem = self._eylem(_t("Sayfa numarası"), self.sayfa_no_degistir, None, None, True, "sayfa_no")
+        g.addWidget(self._buyuk(self.no_eylem), 0, 1)
+        e.addStretch(1)
+
+        # ---- Duzen ----
+        z = self._sekme(_t("Düzen"))
+        g = self._grup(z, _t("Sayfa yapısı"))
+        self.kenar = QComboBox(); self.kenar.addItems([_t(k) for k in KENAR] + [_t("Özel…")]); self.kenar.setToolTip(_t("Kenar boşlukları"))
         self.kenar.activated.connect(self.kenar_sec)
-        z.addWidget(QLabel(" Kenar boşlukları ")); z.addWidget(self.kenar)
         self.kagit = QComboBox(); self.kagit.addItems(list(KAGIT)); self.kagit.activated.connect(self.kagit_sec)
-        z.addWidget(QLabel(" Kâğıt ")); z.addWidget(self.kagit)
-        z.addAction(self._eylem("Dikey / yatay", self.yon_degistir))
+        self.kagit.setToolTip(_t("Kâğıt boyutu"))
+        for sat, (s, metin, kutu) in enumerate((("kenar_bosluklari", _t("Kenar boşlukları"), self.kenar),
+                                                 ("kagit", _t("Kâğıt boyutu"), self.kagit))):
+            simge = QLabel(); simge.setPixmap(ikon(s).pixmap(20, 20))
+            g.addWidget(simge, sat, 0); g.addWidget(QLabel(metin), sat, 1); g.addWidget(kutu, sat, 2)
+        g.addWidget(self._buyuk(self._eylem(_t("Dikey / yatay"), self.yon_degistir, simge="yon")), 0, 3, 2, 1)
+        z.addStretch(1)
+
+        # ---- Hizli erisim: sekmelerin sagi (Kaydet, Geri al, Yinele) ----
+        hizli = QWidget(); hz = QHBoxLayout(hizli); hz.setContentsMargins(0, 2, 8, 0); hz.setSpacing(0)
+        for a in (self._eylem(_t("Kaydet"), self.kaydet, None, None, False, "kaydet"),
+                  self._eylem(_t("Geri al"), lambda: self.gorunum.undo(), "Ctrl+Z", simge="geri_al"),
+                  self._eylem(_t("Yinele"), lambda: self.gorunum.redo(), "Ctrl+Y", simge="yinele")):
+            b = self._kucuk(a); b.setIconSize(QSize(18, 18)); hz.addWidget(b)
+        self.serit.setCornerWidget(hizli, Qt.TopRightCorner)
+        self.serit.setCurrentIndex(1)                  # Word gibi Giris sekmesiyle acilir
+        self.setStyleSheet(SERIT_STILI)
 
     def _durum_cubugu(self) -> None:
         self.durum = QLabel(); self.statusBar().addPermanentWidget(self.durum)
@@ -448,7 +562,7 @@ class BelgeEditoru(QMainWindow):
     def kaydedilsin_mi(self) -> bool:
         if not self.gorunum.document().isModified():
             return True
-        c = QMessageBox.question(self, "Kaydedilmemiş değişiklikler", "Belgedeki değişiklikler kaydedilsin mi?",
+        c = QMessageBox.question(self, _t("Kaydedilmemiş değişiklikler"), _t("Belgedeki değişiklikler kaydedilsin mi?"),
                                  QMessageBox.Save | QMessageBox.Discard | QMessageBox.Cancel)
         if c == QMessageBox.Save:
             return self.kaydet()
@@ -463,8 +577,8 @@ class BelgeEditoru(QMainWindow):
     def ac_diyalog(self) -> None:
         if not self.kaydedilsin_mi():
             return
-        yol, _ = QFileDialog.getOpenFileName(self, "Belge aç", str(self.yol.parent if self.yol else Path.home()),
-                                             "Word belgesi (*.docx)")
+        yol, _ = QFileDialog.getOpenFileName(self, _t("Belge aç"), str(self.yol.parent if self.yol else Path.home()),
+                                             _t("Word belgesi (*.docx)"))
         if yol:
             self.ac(yol)
 
@@ -473,16 +587,16 @@ class BelgeEditoru(QMainWindow):
         try:
             sonuc = docx_io.docx_oku(yol)
         except Exception as h:
-            QMessageBox.warning(self, "Açılamadı", f"{yol.name} açılamadı:\n{h}\n\nLibreOffice'te açmayı deneyebilirsin.")
+            QMessageBox.warning(self, _t("Açılamadı"), _t("{ad} açılamadı:\n{hata}\n\nLibreOffice'te açmayı deneyebilirsin.", ad=yol.name, hata=h))
             return False
         self.yol = yol
         self._belge_koy(sonuc.belge, sonuc.sayfa)
         self.kayipli = bool(sonuc.uyarilar)
         self.ozgun = yol if self.kayipli else None
         if self.kayipli:
-            self.uyari_metin.setText("Bu belgede editörün taşıyamadığı içerik var: " + ", ".join(sonuc.uyarilar)
-                                     + ". Özgün dosyanın üstüne kaydedilmez (o içerik silinirdi); değişiklikleri "
-                                       "Farklı kaydet ile yeni bir dosyaya kaydet ya da belgeyi LibreOffice'te düzenle.")
+            self.uyari_metin.setText(_t("Bu belgede editörün taşıyamadığı içerik var: ") + ", ".join(sonuc.uyarilar)
+                                     + _t(". Özgün dosyanın üstüne kaydedilmez (o içerik silinirdi); değişiklikleri "
+                                       "Farklı kaydet ile yeni bir dosyaya kaydet ya da belgeyi LibreOffice'te düzenle."))
             self.uyari.show()
         else:
             self.uyari.hide()
@@ -496,14 +610,14 @@ class BelgeEditoru(QMainWindow):
     def farkli_kaydet(self) -> bool:
         oneri = self.yol or (Path.home() / "Belge.docx")
         if self.kayipli and self.ozgun is not None and oneri == self.ozgun:
-            oneri = oneri.with_name(oneri.stem + " (düzenlendi).docx")
-        yol, _ = QFileDialog.getSaveFileName(self, "Farklı kaydet", str(oneri), "Word belgesi (*.docx)")
+            oneri = oneri.with_name(oneri.stem + _t(" (düzenlendi)") + ".docx")
+        yol, _ = QFileDialog.getSaveFileName(self, _t("Farklı kaydet"), str(oneri), _t("Word belgesi (*.docx)"))
         if not yol:
             return False
         yol = Path(yol if yol.lower().endswith(".docx") else yol + ".docx")
         if self.kayipli and self.ozgun is not None and yol.resolve() == self.ozgun.resolve():
-            QMessageBox.warning(self, "Özgün dosya korunuyor",
-                                "Bu dosyadaki taşınamayan içerik silinirdi. Başka bir ad seç ya da LibreOffice'te düzenle.")
+            QMessageBox.warning(self, _t("Özgün dosya korunuyor"),
+                                _t("Bu dosyadaki taşınamayan içerik silinirdi. Başka bir ad seç ya da LibreOffice'te düzenle."))
             return False
         return self._yaz(yol)
 
@@ -511,21 +625,21 @@ class BelgeEditoru(QMainWindow):
         try:
             docx_io.docx_yaz(self.gorunum.document(), self.ayar, yol)
         except Exception as h:
-            QMessageBox.warning(self, "Kaydedilemedi", f"{yol}\n{h}")
+            QMessageBox.warning(self, _t("Kaydedilemedi"), f"{yol}\n{h}")
             return False
         self.yol = yol
         self.gorunum.document().setModified(False)
-        self.statusBar().showMessage(f"Kaydedildi: {yol.name}", 4000)
+        self.statusBar().showMessage(_t("Kaydedildi: {ad}", ad=yol.name), 4000)
         self._baslik()
         return True
 
     def pdf_aktar(self) -> None:
         oneri = (self.yol.with_suffix(".pdf") if self.yol else Path.home() / "Belge.pdf")
-        yol, _ = QFileDialog.getSaveFileName(self, "PDF olarak dışa aktar", str(oneri), "PDF (*.pdf)")
+        yol, _ = QFileDialog.getSaveFileName(self, _t("PDF olarak dışa aktar"), str(oneri), _t("PDF (*.pdf)"))
         if not yol:
             return
         self.pdf_yaz(yol)
-        self.statusBar().showMessage(f"PDF yazıldı: {Path(yol).name}", 4000)
+        self.statusBar().showMessage(_t("PDF yazıldı: {ad}", ad=Path(yol).name), 4000)
 
     def pdf_yaz(self, yol) -> None:
         y = QPrinter(QPrinter.HighResolution)
@@ -542,15 +656,15 @@ class BelgeEditoru(QMainWindow):
         (editordeki degisiklik henuz kaydedilmediyse once sorulur)."""
         so = soffice_yolu()
         if not so:
-            QMessageBox.information(self, "LibreOffice bulunamadı",
-                                    "LibreOffice kurulu değil. libreoffice.org'dan ücretsiz kurulabilir.")
+            QMessageBox.information(self, _t("LibreOffice bulunamadı"),
+                                    _t("LibreOffice kurulu değil. libreoffice.org'dan ücretsiz kurulabilir."))
             return
         if self.kayipli and self.ozgun:
             # Ozgun Word dosyasi KAYDETMEDEN acilir: tasinamayan icerik orada.
             hedef = self.ozgun
             if self.gorunum.document().isModified():
-                self.statusBar().showMessage("LibreOffice özgün dosyayı açtı; editördeki kaydedilmemiş değişiklikler "
-                                             "o dosyada yok.", 8000)
+                self.statusBar().showMessage(_t("LibreOffice özgün dosyayı açtı; editördeki kaydedilmemiş değişiklikler "
+                                             "o dosyada yok."), 8000)
         else:
             if self.yol is None or self.gorunum.document().isModified():
                 if not self.kaydet():
@@ -590,14 +704,17 @@ class BelgeEditoru(QMainWindow):
         self._bicim(lambda f: f.setVerticalAlignment(QTextCharFormat.AlignNormal if simdiki == hiza else hiza))
 
     def renk_sec(self):
-        r = QColorDialog.getColor(self.gorunum.textColor(), self, "Yazı rengi")
+        r = QColorDialog.getColor(self.gorunum.textColor(), self, _t("Yazı rengi"))
         if r.isValid():
             self._bicim(lambda f: f.setForeground(QBrush(r)))
+            self.renk_eylem.setIcon(ikon("yazi_rengi", r.name()))
 
     def vurgu_sec(self):
-        r = QColorDialog.getColor(QColor("#ffff00"), self, "Vurgu rengi")
+        r = QColorDialog.getColor(QColor("#ffff00"), self, _t("Vurgu rengi"))
         if r.isValid():
-            self._bicim(lambda f: f.setBackground(QBrush(QColor(docx_io.VURGU[docx_io.en_yakin_vurgu(r)]))))
+            renk = QColor(docx_io.VURGU[docx_io.en_yakin_vurgu(r)])
+            self._bicim(lambda f: f.setBackground(QBrush(renk)))
+            self.vurgu_eylem.setIcon(ikon("vurgu", renk.name()))
 
     def bicimi_temizle(self):
         c = self.gorunum.textCursor()
@@ -653,10 +770,10 @@ class BelgeEditoru(QMainWindow):
         c.mergeBlockFormat(bf)
 
     def tablo_ekle(self) -> None:
-        dlg = QDialog(self); dlg.setWindowTitle("Tablo ekle"); form = QFormLayout(dlg)
+        dlg = QDialog(self); dlg.setWindowTitle(_t("Tablo ekle")); form = QFormLayout(dlg)
         sat = QSpinBox(); sat.setRange(1, 200); sat.setValue(3)
         sut = QSpinBox(); sut.setRange(1, 30); sut.setValue(3)
-        form.addRow("Satır:", sat); form.addRow("Sütun:", sut)
+        form.addRow(_t("Satır:"), sat); form.addRow(_t("Sütun:"), sut)
         dug = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
         dug.accepted.connect(dlg.accept); dug.rejected.connect(dlg.reject); form.addRow(dug)
         if dlg.exec() != QDialog.Accepted:
@@ -668,19 +785,19 @@ class BelgeEditoru(QMainWindow):
     def _tablo_islem(self, ne: str) -> None:
         c = self.gorunum.textCursor(); t = c.currentTable()
         if t is None:
-            self.statusBar().showMessage("Önce imleci bir tablonun içine koy.", 3000)
+            self.statusBar().showMessage(_t("Önce imleci bir tablonun içine koy."), 3000)
             return
         h = t.cellAt(c)
         {"satir": lambda: t.insertRows(h.row() + 1, 1), "sutun": lambda: t.insertColumns(h.column() + 1, 1),
          "satir_sil": lambda: t.removeRows(h.row(), 1), "sutun_sil": lambda: t.removeColumns(h.column(), 1)}[ne]()
 
     def resim_ekle(self) -> None:
-        yol, _ = QFileDialog.getOpenFileName(self, "Resim ekle", str(Path.home()), "Resim (*.png *.jpg *.jpeg *.bmp *.gif)")
+        yol, _ = QFileDialog.getOpenFileName(self, _t("Resim ekle"), str(Path.home()), _t("Resim (*.png *.jpg *.jpeg *.bmp *.gif)"))
         if not yol:
             return
         img = QImage(yol)
         if img.isNull():
-            QMessageBox.warning(self, "Resim", "Resim okunamadı.")
+            QMessageBox.warning(self, _t("Resim"), _t("Resim okunamadı."))
             return
         sayi = len(_resim_adlari(self.gorunum.document())) + 1
         ad = f"belge://ekli{sayi}-{Path(yol).stem}"
@@ -713,9 +830,9 @@ class BelgeEditoru(QMainWindow):
         self.ayar.sayfa_no = self.no_eylem.isChecked(); self._duzen_degisti()
 
     def kenar_sec(self, i: int) -> None:
-        ad = self.kenar.itemText(i)
-        if ad in KENAR:
-            a = self.ayar; a.ust = a.alt = a.sol = a.sag = KENAR[ad]
+        adlar = list(KENAR)              # gosterilen ad cevrilmis olabilir: sira ile eslenir
+        if i < len(adlar):
+            a = self.ayar; a.ust = a.alt = a.sol = a.sag = KENAR[adlar[i]]
         else:
             d = KenarBosluklari(self.ayar, self)
             if d.exec() != QDialog.Accepted:
@@ -754,6 +871,10 @@ class BelgeEditoru(QMainWindow):
 
     def _konum_goster(self) -> None:
         bf = self.gorunum.textCursor().blockFormat()
+        hiza = int(bf.alignment() & (Qt.AlignLeft | Qt.AlignHCenter | Qt.AlignRight | Qt.AlignJustify)) or int(Qt.AlignLeft)
+        a = self.hiza_eylem.get(hiza)
+        if a is not None:
+            a.setChecked(True)
         seviye = bf.headingLevel()
         self.stil.setCurrentIndex(seviye + 1 if 1 <= seviye <= 3 else (1 if bf.property(QTextFormat.UserProperty + 1) == "baslik" else 0))
         self._sayac()
@@ -764,11 +885,12 @@ class BelgeEditoru(QMainWindow):
         y = self.ayar.yukseklik * MM_PX
         r = self.gorunum.cursorRect()
         sayfa = int((r.top() + self.gorunum.verticalScrollBar().value()) // y) + 1
-        self.durum.setText(f"Sayfa {min(sayfa, self.gorunum.sayfa_sayisi())} / {self.gorunum.sayfa_sayisi()}   ·   "
-                           f"{kelime} kelime   ·   {len(metin)} karakter")
+        self.durum.setText(_t("Sayfa {sayfa} / {toplam}   ·   {kelime} kelime   ·   {karakter} karakter",
+                              sayfa=min(sayfa, self.gorunum.sayfa_sayisi()), toplam=self.gorunum.sayfa_sayisi(),
+                              kelime=kelime, karakter=len(metin)))
 
     def _baslik(self) -> None:
-        ad = self.yol.name if self.yol else "Adsız belge"
+        ad = self.yol.name if self.yol else _t("Adsız belge")
         self.setWindowTitle(("* " if self.gorunum.document().isModified() else "") + f"{ad} — Okuma Atölyesi Belge")
 
     def closeEvent(self, e):
