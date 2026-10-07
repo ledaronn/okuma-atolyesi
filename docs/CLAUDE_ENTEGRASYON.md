@@ -2,7 +2,7 @@
 
 ## Kullanıcının isteği ve sınır
 
-Okuma Atölyesi bağımsız bir klasör ve bağımsız Python sanal ortamıdır. Mevcut Limina projesinin dosyaları bu paket hazırlanırken değiştirilmedi. Okuyucuyu mevcut `belge.py`, `Donusturucu/` veya `arayuz/index.html` içine taşımayın. Kullanıcı ana projede gereken bağlantı değişikliğini Claude'un yapmasını istiyor.
+Okuma Atölyesi bağımsız bir klasör ve bağımsız Python sanal ortamıdır. Mevcut Pevrai projesinin dosyaları bu paket hazırlanırken değiştirilmedi. Okuyucuyu mevcut `belge.py`, `Donusturucu/` veya `arayuz/index.html` içine taşımayın. Kullanıcı ana projede gereken bağlantı değişikliğini Claude'un yapmasını istiyor.
 
 Bu belge, kullanıcının sağladığı `proje_onemli_dosyalar.txt` içindeki `mcp_bridge.py`, `gate.py` ve `policy.toml` düzeni esas alınarak hazırlanmıştır. Güncel yerel dosyalarınız farklıysa mevcut sürümü esas alın. Aşağıdaki parçalar öneridir; uygulanmış bir yama değildir.
 
@@ -64,7 +64,7 @@ C:\Araclar\OkumaAtolyesi\.venv\Scripts\python.exe C:\Araclar\OkumaAtolyesi\app.p
 "okuma.get_outline" = "READ"
 ```
 
-Bu sınıflandırma yeni yazma işlemlerini mevcut onay mekanizmasına bağlar. Okuyucudaki doğrudan kullanıcı tıklaması aynı şey değildir; GUI kendi yerel işlemini yapar. Limina günlüğünün yerine geçilmez; Okuma Atölyesi ayrıca kendi metadata işlem günlüğünü tutar.
+Bu sınıflandırma yeni yazma işlemlerini mevcut onay mekanizmasına bağlar. Okuyucudaki doğrudan kullanıcı tıklaması aynı şey değildir; GUI kendi yerel işlemini yapar. Pevrai günlüğünün yerine geçilmez; Okuma Atölyesi ayrıca kendi metadata işlem günlüğünü tutar.
 
 ## 4. Yol kontrollerini somut bağla
 
@@ -173,7 +173,7 @@ AI çıktılarının okuyucuda görünmesi için `add_note` kullanılabilir. Oku
 9. `export_pdf` çıktısı başka bir PDF okuyucuda not/işaretlemeyle açılıyor.
 10. İzinli kök dışındaki import ve hatalı sayfa reddediliyor; ardından başka MCP çağrısı çalışıyor.
 
-Bu paketin testleri bağımsız çekirdek, GUI ve MCP sunucusunu doğrular. Kullanıcının Windows bilgisayarı, gerçek Limina köprüsü ve fiziksel kalem donanımı üzerinde entegrasyon testi Claude/kullanıcı tarafında yapılmalıdır.
+Bu paketin testleri bağımsız çekirdek, GUI ve MCP sunucusunu doğrular. Kullanıcının Windows bilgisayarı, gerçek Pevrai köprüsü ve fiziksel kalem donanımı üzerinde entegrasyon testi Claude/kullanıcı tarafında yapılmalıdır.
 
 Paketin kendi bağlantı kontrolünü ayrıca çalıştırabilirsiniz:
 

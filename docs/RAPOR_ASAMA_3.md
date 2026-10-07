@@ -1,7 +1,7 @@
 # Aşama 3 raporu: akıcılık düzeltmesi (üretim hattı)
 
 Tarih: 15 Eylül 2026. Commit'ler: `a8ae745` (taban, kod değişikliği yok), `5e7701c` (Aşama 3), `965ca48` (rapor, `stop()` düzeltmesi).
-Ölçüm: `olcum/olc.py`, Aşama 1 ile aynı script, aynı makine, aynı dört belge. Ham çıktı `olcum/ham_arayuz_asama3.txt`.
+Ölçüm: `docs/olcum/olc.py`, Aşama 1 ile aynı script, aynı makine, aynı dört belge. Ham çıktı `docs/olcum/ham_arayuz_asama3.txt`.
 
 Kapsam: Aşama 1 raporundaki 1–4 numaralı öneriler + 9 (dışa aktarım). 7 (işaretleme katmanı) ve 8 (yumuşak kaydırma) bu aşamada **yapılmadı**, sıradaki.
 
@@ -11,7 +11,7 @@ Kapsam: Aşama 1 raporundaki 1–4 numaralı öneriler + 9 (dışa aktarım). 7 
 
 | Koşul | Durum | Kanıt |
 |---|---|---|
-| Aşama 1 ölçümü tekrarlanmış, kare süresi raporlanmış | ✅ | §2 tablosu; `olcum/ham_arayuz_asama3.txt` |
+| Aşama 1 ölçümü tekrarlanmış, kare süresi raporlanmış | ✅ | §2 tablosu; `docs/olcum/ham_arayuz_asama3.txt` |
 | İyileşme sayıyla gösterilmiş | ✅ | §2: tek tur tıkanma 300–800 ms → en fazla 16–41 ms |
 | 100+ sayfalık belgede hızlı kaydırma denenmiş | ✅ | 200 sayfalık kitap, 120 tık / 8 ms ara: kaydırma sırasında tıkanma 0 |
 | Kaydırma hiçbir koşulda beklemez; sayfa hazır değilse yer tutucu | ✅ (offscreen) | `test_rendering_never_blocks_gui_thread`: 1,5 s kaydırma + zoom 2, olay döngüsü turu < 50 ms; üretim UI dışında |
@@ -121,7 +121,7 @@ Tarih: 15 Eylül 2026. Commit: `f75bde7`. Aşama 1 raporundaki 7 numaralı öner
 
 | Koşul | Durum | Kanıt |
 |---|---|---|
-| İşaretleme eklemek/silmek sayfa görüntüsünü yenilemez | ✅ | `olcum/ham_arayuz_asama3b.txt`: "tek işaretleme sonrası: **0 sayfa** yeniden üretildi" (4 belge); `test_annotation_layer_does_not_rerender_pages` |
+| İşaretleme eklemek/silmek sayfa görüntüsünü yenilemez | ✅ | `docs/olcum/ham_arayuz_asama3b.txt`: "tek işaretleme sonrası: **0 sayfa** yeniden üretildi" (4 belge); `test_annotation_layer_does_not_rerender_pages` |
 | Kalem çizgisi bırakınca kaybolmaz | ✅ | Bırakınca geçici çizim kalkar ve aynı karede kalıcı öğe gelir (`reader.temp is None`, öğe `ann_items`'ta) |
 | Silgi ne sileceğini gösterir | ✅ | Üzerine gelince kırmızı kesikli çerçeve + imleç; testte `hover_item` doğrulanıyor |
 | Fosfor önizlemesi satıra yapışır | ✅ | `test_highlight_preview_snaps_to_lines_and_rotated_page`: sürüklerken önizleme kutusu sözcük satırıyla ±1 pt |
@@ -141,7 +141,7 @@ Tarih: 15 Eylül 2026. Commit: `f75bde7`. Aşama 1 raporundaki 7 numaralı öner
 
 - `QRectF.united()` null dikdörtgeni yok sayıyor; kalem/ok sınır kutusu tek noktaya küçülmüştü (silgi vurgusu minik kare çıktı, ekran görüntüsünde yakalandı). Noktalardan açık min/max ile düzeltildi.
 - İşaretleme eklerken kalan tek kare (22–23 ms) `Library.add_annotation`'ın her seferinde PDF'i açması (`derotation_matrix` için). Katmanla ilgisi yok; istenirse geometry önbelleğiyle sıfırlanır.
-- `olcum/envanter.py`'nin açıklama metinleri Aşama 2 durumunu anlatıyor (sabit metin); durum sütunu güncel.
+- `docs/olcum/envanter.py`'nin açıklama metinleri Aşama 2 durumunu anlatıyor (sabit metin); durum sütunu güncel.
 
 ## Sıradaki
 

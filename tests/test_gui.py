@@ -421,7 +421,10 @@ def test_assistant_docked_panel_pinning_and_source_snapshot(window,qt):
     import json,time
     w,lib,d=window
     with w.assistant_link.db() as db: db.execute('INSERT OR REPLACE INTO peer VALUES(1,?,?)',(time.time(),'[]'))
+    from PySide6.QtCore import QAbstractAnimation
+    w.toggle_strip_pin(False); w.show_strip()  # Suren kayma animasyonu varken sabitle.
     w.toggle_strip_pin(True); w.hide_strip(); idle(qt,.2)
+    assert w.strip._anim.state()==QAbstractAnimation.State.Stopped
     assert w.strip.y()==0 and w.strip.isVisible()
     w.reader.selection='Alpha beta'; w.reader.selection_page=1; w.selection_changed('Alpha beta')
     w.ask_assistant('explain'); idle(qt,.2)

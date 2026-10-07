@@ -3,7 +3,7 @@ import os, sys, time, math, tempfile, statistics as st
 from pathlib import Path
 os.environ['QT_QPA_PLATFORM']='offscreen'
 HERE=Path(__file__).parent
-sys.path.insert(0,str(HERE.parent))
+sys.path.insert(0,str(HERE.parent.parent))
 DATA=Path(tempfile.mkdtemp(prefix='okuma_olcum_'))  # gerçek veri klasörüne dokunmaz
 import pymupdf as fitz
 from PySide6.QtCore import QTimer, Qt, QPoint, QPointF
@@ -117,3 +117,6 @@ for name,doc_id in docs.items():
     print(f"  bellekte tutulan sayfa görüntüsü: {len(r.rendered)} sayfa, ≈{tot/1e6:.0f} MB")
 print(f"\nÜretim iş parçacığı: {'yalnızca UI DIŞI' if render_threads and main_thread not in render_threads else 'UI iş parçacığında'} ({len(render_threads)} farklı iş parçacığı)")
 win.close()
+sys.stdout.flush()
+# Olcum tamamlandi ve isci kapandi; offscreen Qt destructor hatasini atla.
+os._exit(0)

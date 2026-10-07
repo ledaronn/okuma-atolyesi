@@ -1,11 +1,11 @@
 # Aşama 1–2 raporu: akıcılık teşhisi ve araç envanteri
 
-Tarih: 14 Eylül 2026. Kod değiştirilmedi. Ölçüm scriptleri ve ham çıktılar `olcum/` klasöründe.
+Tarih: 14 Eylül 2026. Kod değiştirilmedi. Ölçüm scriptleri ve ham çıktılar `docs/olcum/` klasöründe.
 
 Makine: Intel i5-8250U (4 çekirdek, 1,6 GHz), 8 GB RAM, Intel UHD 620. Python 3.13, PyMuPDF 1.26.6, PySide6 6.11.2.
 Qt `offscreen` platformunda gerçek `Window` ve gerçek fare/tekerlek olaylarıyla ölçüldü. Sınırları §1.6'da.
 
-**Commit hash'i yok.** Paket Limina deposunun `.gitignore`'unda (`Araclar/`), kendi git deposu da yok.
+**Commit hash'i yok.** Paket Pevrai deposunun `.gitignore`'unda (`Araclar/`), kendi git deposu da yok.
 Aşama 3'ten önce paket içinde `git init` yapılması gerekir; yoksa geri dönüş noktası olmaz. Bu kararı sana bırakıyorum.
 
 ---
@@ -16,9 +16,9 @@ Aşama 3'ten önce paket içinde `git init` yapılması gerekir; yoksa geri dön
 
 > "Sayfa görüntüsü ekranda lazım olduğu anda üretiliyor ve bu iş arayüzle aynı iş parçacığında bekliyor."
 
-**Doğru.** `Reader.render_visible` ([app.py:162](app.py#L162)) bir `QTimer` ile UI iş parçacığında çağrılıyor; içindeki `lib.render()` her sayfa için PDF'i diskten açıp rasterize ediyor, PNG'ye kodluyor, `QPixmap.loadFromData` ile çözüyor — hepsi eşzamanlı. Görünen sayfa sayısı × sayfa başı süre kadar arayüz donuyor.
+**Doğru.** `Reader.render_visible` ([app.py:162](../app.py#L162)) bir `QTimer` ile UI iş parçacığında çağrılıyor; içindeki `lib.render()` her sayfa için PDF'i diskten açıp rasterize ediyor, PNG'ye kodluyor, `QPixmap.loadFromData` ile çözüyor — hepsi eşzamanlı. Görünen sayfa sayısı × sayfa başı süre kadar arayüz donuyor.
 
-Ek olarak: kaydırma sırasında **hiç üretim yapılmıyor**. `on_scroll` her kaydırma olayında 50 ms'lik zamanlayıcıyı sıfırlıyor ([app.py:157](app.py#L157)); hızlı kaydırmada zamanlayıcı hiç dolmuyor. Kullanıcı beyaz dikdörtgenler görüyor, durunca tek seferde 340–600 ms donuyor.
+Ek olarak: kaydırma sırasında **hiç üretim yapılmıyor**. `on_scroll` her kaydırma olayında 50 ms'lik zamanlayıcıyı sıfırlıyor ([app.py:157](../app.py#L157)); hızlı kaydırmada zamanlayıcı hiç dolmuyor. Kullanıcı beyaz dikdörtgenler görüyor, durunca tek seferde 340–600 ms donuyor.
 
 ### 1.2 Sayfa başına üretim maliyeti (çekirdek, ms, medyan, 12 sayfa)
 
@@ -69,8 +69,8 @@ Okuma:
 
 1. **Kaydırmada kare süresi; 16 ms'i aşan işlem?** Boyama 0,1–0,3 ms — kaydırmanın kendisi akıcı. 16 ms'i aşan tek şey `render_visible` → `lib.render`: sayfa başına 90–250 ms (zoom 1), 330–560 ms (zoom 2), görünür sayfa sayısıyla çarpılıyor. Okuma hızında kaydırırken her 1–2 tıkta bir 100–216 ms donma.
 2. **Bir sayfa kaç ms?** Kitap 123, slayt 127–151, görüntü slaytı 267 (zoom 1). Zoom 2'de 2,5–3 katı. Yoğunluk farkı beklenenden az; belirleyici olan piksel alanı ve PNG.
-3. **Yakınlaştırmada tüm sayfa yeniden mi?** Evet. `set_zoom` → `clear_renders` → görünür her sayfa sıfırdan ([app.py:142](app.py#L142)). Ara ölçekleme, eski pixmap'i büyütüp gösterme yok. Her adım 280–514 ms.
-4. **Önceki/sonraki sayfa önceden mi?** Kısmen: görünen alan ±500 sahne birimi ([app.py:164](app.py#L164)); zoom 1'de ≈ ±0,6 kitap sayfası, ≈ ±1 slayt. Ama eşzamanlı olduğundan prefetch tıkanmayı **artırıyor**, azaltmıyor.
+3. **Yakınlaştırmada tüm sayfa yeniden mi?** Evet. `set_zoom` → `clear_renders` → görünür her sayfa sıfırdan ([app.py:142](../app.py#L142)). Ara ölçekleme, eski pixmap'i büyütüp gösterme yok. Her adım 280–514 ms.
+4. **Önceki/sonraki sayfa önceden mi?** Kısmen: görünen alan ±500 sahne birimi ([app.py:164](../app.py#L164)); zoom 1'de ≈ ±0,6 kitap sayfası, ≈ ±1 slayt. Ama eşzamanlı olduğundan prefetch tıkanmayı **artırıyor**, azaltmıyor.
 5. **UI iş parçacığı ne kadar bloke?** Tek blok 132–805 ms. Okuma hızında kaydırmada saniyede ~0,7–1,2 s toplam tıkanma (yavaş kaydırma satırı). Yani okurken her saniyenin yarısından fazlası donuk.
 
 ### 1.5 "Animasyon yok, 10 fps hissi" — üç bileşen
@@ -110,7 +110,7 @@ Kazançlar yukarıdaki tablodan hesaplandı, tahmin değil.
 
 | Koşul | Durum | Kanıt |
 |---|---|---|
-| Kaydırmada kare süresi ölçülmüş | ✅ | 1.3 tablosu, `olcum/ham_arayuz.txt` |
+| Kaydırmada kare süresi ölçülmüş | ✅ | 1.3 tablosu, `docs/olcum/ham_arayuz.txt` |
 | Bloke eden işlem tespit edilmiş | ✅ | `render_visible` → `lib.render`; alt kırılım 1.2 |
 | Düzeltme önerisi ölçüme dayanıyor | ✅ | 1.7, her satırda kanıt sütunu |
 
@@ -118,7 +118,7 @@ Kazançlar yukarıdaki tablodan hesaplandı, tahmin değil.
 
 ## 2. Aşama 2 — Araç ve özellik envanteri
 
-Her araç gerçek Qt fare olaylarıyla, 200 sayfalık yoğun metinli kitapta denendi (`olcum/envanter.py`, ham çıktı `olcum/ham_envanter.txt`).
+Her araç gerçek Qt fare olaylarıyla, 200 sayfalık yoğun metinli kitapta denendi (`docs/olcum/envanter.py`, ham çıktı `docs/olcum/ham_envanter.txt`).
 
 ### 2.1 Envanter tablosu
 
@@ -128,7 +128,7 @@ Her araç gerçek Qt fare olaylarıyla, 200 sayfalık yoğun metinli kitapta den
 | Metin seç | **kısmen** | Tam satır doğru. Satır 1 ortasından satır 3 ortasına sürüklemede 13 kelimelik satırlardan **4 kelime** geldi: dikdörtgen içindeki **sütun**, okuma akışı değil (`'sistem\ngüvenilirlik\nbulgu sapma'`). Sürüklerken metin vurgusu yok, yarı saydam kutu var |
 | Kalem | çalışıyor | Sürüklerken geçici yol anında çiziliyor; **bırakınca siliniyor**, tüm görünür sayfalar yeniden üretilince geri geliyor (371–771 ms görünmez) |
 | Fosfor | **kısmen** | Metin üstünde satıra yapışıyor (2 satır → 2 kutu, metin kaydediliyor). Boş kenarda serbest kutu doğru. Sürüklerken önizleme satıra yapışmıyor; bırakınca yeniden üretim gecikmesiyle görünüyor |
-| Alt çizgi | çalışıyor | Satır kutusu ve metin doğru. Her üretimde konsola `Cannot set border for 'Underline'` uyarısı ([core.py:337](core.py#L337)) |
+| Alt çizgi | çalışıyor | Satır kutusu ve metin doğru. Her üretimde konsola `Cannot set border for 'Underline'` uyarısı ([core.py:337](../core.py#L337)) |
 | Kutu | çalışıyor | Koordinatlar doğru |
 | Ok | çalışıyor | İki uç nokta doğru |
 | Not | çalışıyor | Panelde görünüyor. Metin modal pencereyle giriliyor, sayfada yalnızca ikon |
@@ -149,7 +149,7 @@ Her araç gerçek Qt fare olaylarıyla, 200 sayfalık yoğun metinli kitapta den
 
 **Koleksiyon raf olarak kullanılabilir mi (§2.6)?** **Hayır, yetersiz.** `documents.collection` serbest metin sütunu; ayrı tablo, renk, sıra, açıklama yok. Boş raf olamaz (belgesi olmayan koleksiyon listede görünmez). Arayüz: kenar çubuğunda tek `QComboBox` filtresi; atama "Başlık / etiket / koleksiyon" iletişim kutusundaki metin kutusu. **§4.1'in ikinci yolu gerekli:** `shelves` tablosu eklenir, mevcut `collection` değerleri raf olarak taşınır (yedek alınarak).
 
-**Metin seçimi yoğun metinde kullanışlı mı?** **Hayır.** Dikdörtgen içindeki kelime merkezleri alınıyor ([app.py:260](app.py#L260)); çok satırlı seçimde okuma akışı değil sütun geliyor. Kitap okuyan biri için beklenmedik. Slaytta (kısa satırlar) daha az sorun. Akış seçimi (başlangıç kelimesinden bitiş kelimesine, `words()` sıra numaralarıyla) küçük bir değişiklik; Aşama 3 sonrasına not.
+**Metin seçimi yoğun metinde kullanışlı mı?** **Hayır.** Dikdörtgen içindeki kelime merkezleri alınıyor ([app.py:260](../app.py#L260)); çok satırlı seçimde okuma akışı değil sütun geliyor. Kitap okuyan biri için beklenmedik. Slaytta (kısa satırlar) daha az sorun. Akış seçimi (başlangıç kelimesinden bitiş kelimesine, `words()` sıra numaralarıyla) küçük bir değişiklik; Aşama 3 sonrasına not.
 
 **Fosfor metne yapışıyor mu?** **Bırakınca evet, sürüklerken hayır.** Kayıt satır kutularıyla doğru; ama sürükleme önizlemesi yarı saydam dikdörtgen, metne yapıştığı ancak bırakıp yeniden üretim bitince görülüyor. "Gerçeklik hissi" boşluğu burada.
 
@@ -166,13 +166,13 @@ Her araç gerçek Qt fare olaylarıyla, 200 sayfalık yoğun metinli kitapta den
 
 - **Paket git'te değil.** Yukarıda. Aşama 3 öncesi karar gerekli.
 - **Her `Library` çağrısı 9 ms** (bağlantı aç-kapa). Sayfa üretiminde 4, dışa aktarımda 200+ kez. `render`, `words`, `annotations`, `get_state` hepsi bu yoldan. Kalıcı bağlantı ya da önbellek Aşama 3'te.
-- **`poll()` her 1,2 s'de `revision()` kontrol ediyor; değişince görünür her sayfayı siliyor** ([app.py:626](app.py#L626)). Limina MCP ile not eklediğinde okuyucu 500–800 ms donuyor. Ölçümde `[1, 2, 3, 1, 2, 3]` çift üretimi bundan.
-- **`load()` açılışta üretimi hem doğrudan hem zamanlayıcıyla tetikliyor** ([app.py:115](app.py#L115)): `set_zoom` → `clear_renders` (15 ms) + `go` (20 ms) + doğrudan `render_visible()`. İkinci tetik boş dönüyor ama kod okunurluğu açısından not.
+- **`poll()` her 1,2 s'de `revision()` kontrol ediyor; değişince görünür her sayfayı siliyor** ([app.py:626](../app.py#L626)). Pevrai MCP ile not eklediğinde okuyucu 500–800 ms donuyor. Ölçümde `[1, 2, 3, 1, 2, 3]` çift üretimi bundan.
+- **`load()` açılışta üretimi hem doğrudan hem zamanlayıcıyla tetikliyor** ([app.py:115](../app.py#L115)): `set_zoom` → `clear_renders` (15 ms) + `go` (20 ms) + doğrudan `render_visible()`. İkinci tetik boş dönüyor ama kod okunurluğu açısından not.
 - **200 sayfa içe alma 14–17 s** (metin çıkarma). Arka planda ama okuyucu kilitli; ilerleme yüzdesi yok (belirsiz çubuk).
 - **`QTest.qWait` GIL'i bırakmıyor.** Arka plan işleri test sırasında 15× yavaş (slayt dışa aktarımı 0,3 s → 4,7 s). Paketin `tests/test_gui.py::test_background_callback_on_gui_thread` bu yüzden 100×30 ms bekliyor. Yeni testlerde `time.sleep` tabanlı bekleme kullanılmalı. Bu raporun ilk envanter koşusunda "PDF kaydet" ve "Sayfalar" bu artefakt yüzünden yanlışlıkla "çalışmıyor" çıktı; olay döngüsüyle tekrar ölçülüp düzeltildi.
 - **`Cannot set border for 'Underline'`** uyarısı `_apply` içinde her alt çizgi üretiminde/dışa aktarımında konsola basılıyor. Zararsız ama `set_border` çağrısı alt çizgi için atlanmalı.
 - **Bellek:** zoom 1'de sayfa başına ≈4 MB (kitap) / 4 MB (slayt), zoom 2'de 16 MB. Yalnızca görünür ±500 birim tutulduğundan 12–80 MB. Şimdilik sorun değil; arka plan üretimi + prefetch eklenince sınır konmalı.
-- **Yan panelde dördüncü sekme (AI)** var; §4.2 üç sekme (Notlar, İçindekiler, Arama) diyor. Seçili metni AI istemine kopyalayan düğmeler burada. §7 "Limina'ya sor"u ertelediği için Aşama 4'te bu sekmenin kaderi kararlaştırılmalı.
+- **Yan panelde dördüncü sekme (AI)** var; §4.2 üç sekme (Notlar, İçindekiler, Arama) diyor. Seçili metni AI istemine kopyalayan düğmeler burada. §7 "Pevrai'ya sor"u ertelediği için Aşama 4'te bu sekmenin kaderi kararlaştırılmalı.
 - **Paket testleri Windows'ta 2 hata veriyor** (`pytest tests -q`: 11 geçti, 1 atlandı [Tesseract yok], 2 hata). İkisi de `test_page_operations_backup_and_archive` ve `test_mcp_opens_reader_and_reuses_window` içinde iddialar geçtikten **sonra** `TemporaryDirectory` temizliğinde `WinError 32` (açık `library.sqlite3` tanıtıcısı). TEST_RAPORU.md Linux'ta 14 geçti diyor; Windows'ta önceden de böyleydi, benim işimle ilgisi yok. Aşama 3 kabulü için "yeşil" tanımı bu ikisini kapsayacak şekilde düzeltilmeli (teardown'da bağlantıları kapatmak küçük bir test düzeltmesi).
 - **Yer imi sayfada görünmüyor**, yalnızca listede. Kullanıcı "yer imi koydum" dedikten sonra sayfada iz yok.
 

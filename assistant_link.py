@@ -1,4 +1,4 @@
-"""Optional local inbox protocol. Standard library only; no dependency on Limina."""
+"""Optional local inbox protocol. Standard library only; no dependency on Pevrai."""
 import hashlib
 import json
 import os
@@ -39,7 +39,7 @@ class AssistantLink:
 
     def send(self, task, document_id, page, title, text, workspace_id=None):
         if task not in TASKS: raise ValueError(_t('Bilinmeyen asistan işlemi.'))
-        if not self.peer()['connected']: raise ValueError(_t('Limina bağlantısı yok. Limina’yı açıp yeniden dene.'))
+        if not self.peer()['connected']: raise ValueError(_t('Pevrai bağlantısı yok. Pevrai’yı açıp yeniden dene.'))
         if len(text)>12000: raise ValueError(_t('Seçim çok uzun; en fazla 12.000 karakter seç.'))
         payload={'task':task,'library':self.library,'document_id':document_id,'page':page,'title':title[:200],
                  'text':text,'workspace_id':workspace_id,'source':f'okuma://{self.library}/{document_id}/{page}'}

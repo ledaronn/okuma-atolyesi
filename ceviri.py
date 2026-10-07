@@ -1,7 +1,7 @@
 """ceviri.py — arayüz dili (Türkçe / İngilizce).
 
 Kaynak dil Türkçe: koddaki her kullanıcıya görünen metin t("...") içinden
-geçer, anahtar Türkçe metnin kendisidir (gettext deseni, Limina ile aynı).
+geçer, anahtar Türkçe metnin kendisidir (gettext deseni, Pevrai ile aynı).
 EN sözlüğünde karşılığı olmayan metin Türkçe kalır; tests/test_ceviri.py
 eksik çeviriyi ve yer tutucu uyuşmazlığını yakalar.
 

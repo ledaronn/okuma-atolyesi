@@ -1,0 +1,166 @@
+içe alma kitap_200: 17055.6 ms  (200 sayfa)
+içe alma slayt_120:   864.6 ms  (120 sayfa)
+içe alma slayt_gercek_metin:   208.2 ms  (20 sayfa)
+içe alma slayt_gercek_goruntu:   213.2 ms  (15 sayfa)
+
+=== A. Library.render() adım adım (UI iş parçacığında çağrılan yol) ===
+
+kitap_200  zoom=1.0 (scale=1.4)  piksel=833x1179  png≈218 KB
+   sqlite check_page      ort    6.2 | medyan    4.7 | maks   11.9 ms (n=12)
+   sqlite path()          ort    7.4 | medyan    6.8 | maks   12.0 ms (n=12)
+   fitz.open              ort    3.2 | medyan    2.2 | maks    5.8 ms (n=12)
+   doc[page]              ort    5.0 | medyan    4.4 | maks    8.0 ms (n=12)
+   sqlite annotations     ort   12.0 | medyan   12.3 | maks   19.7 ms (n=12)
+   apply+reload           ort    0.2 | medyan    0.1 | maks    0.6 ms (n=12)
+   get_pixmap             ort   16.3 | medyan   16.3 | maks   18.0 ms (n=12)
+   png encode             ort   58.4 | medyan   58.9 | maks   62.3 ms (n=12)
+   QPixmap png decode     ort   23.4 | medyan   15.3 | maks  118.3 ms (n=12)
+   _toplam                ort  132.1 | medyan  123.3 | maks  235.9 ms (n=12)
+
+kitap_200  zoom=2.0 (scale=2.8)  piksel=1666x2358  png≈430 KB
+   sqlite check_page      ort    7.3 | medyan    6.9 | maks   12.8 ms (n=12)
+   sqlite path()          ort   12.0 | medyan   12.2 | maks   15.6 ms (n=12)
+   fitz.open              ort    4.3 | medyan    3.5 | maks   10.0 ms (n=12)
+   doc[page]              ort    5.6 | medyan    5.7 | maks    9.1 ms (n=12)
+   sqlite annotations     ort   17.2 | medyan   16.0 | maks   27.8 ms (n=12)
+   apply+reload           ort    0.2 | medyan    0.1 | maks    0.6 ms (n=12)
+   get_pixmap             ort   32.3 | medyan   30.0 | maks   41.1 ms (n=12)
+   png encode             ort  221.3 | medyan  207.1 | maks  269.2 ms (n=12)
+   QPixmap png decode     ort   61.8 | medyan   61.2 | maks   71.5 ms (n=12)
+   _toplam                ort  362.0 | medyan  337.1 | maks  437.9 ms (n=12)
+
+slayt_120  zoom=1.0 (scale=1.4)  piksel=1344x756  png≈33 KB
+   sqlite check_page      ort   10.8 | medyan   10.4 | maks   15.9 ms (n=12)
+   sqlite path()          ort   12.2 | medyan   12.5 | maks   16.2 ms (n=12)
+   fitz.open              ort    5.2 | medyan    5.4 | maks    7.8 ms (n=12)
+   doc[page]              ort    4.4 | medyan    4.7 | maks    5.2 ms (n=12)
+   sqlite annotations     ort   19.2 | medyan   20.0 | maks   23.8 ms (n=12)
+   apply+reload           ort    0.2 | medyan    0.1 | maks    0.7 ms (n=12)
+   get_pixmap             ort   15.2 | medyan   15.1 | maks   22.3 ms (n=12)
+   png encode             ort   43.8 | medyan   43.3 | maks   49.2 ms (n=12)
+   QPixmap png decode     ort   16.4 | medyan   16.1 | maks   19.5 ms (n=12)
+   _toplam                ort  127.4 | medyan  126.7 | maks  136.6 ms (n=12)
+
+slayt_120  zoom=2.0 (scale=2.8)  piksel=2688x1512  png≈65 KB
+   sqlite check_page      ort   11.9 | medyan   11.8 | maks   18.2 ms (n=12)
+   sqlite path()          ort   12.6 | medyan   12.6 | maks   16.7 ms (n=12)
+   fitz.open              ort    5.2 | medyan    4.8 | maks    8.7 ms (n=12)
+   doc[page]              ort    5.6 | medyan    5.0 | maks    9.5 ms (n=12)
+   sqlite annotations     ort   22.4 | medyan   22.2 | maks   26.7 ms (n=12)
+   apply+reload           ort    0.3 | medyan    0.2 | maks    0.7 ms (n=12)
+   get_pixmap             ort   25.6 | medyan   24.3 | maks   36.3 ms (n=12)
+   png encode             ort  189.0 | medyan  192.5 | maks  257.3 ms (n=12)
+   QPixmap png decode     ort   66.2 | medyan   63.3 | maks   78.5 ms (n=12)
+   _toplam                ort  338.7 | medyan  337.3 | maks  434.3 ms (n=12)
+
+slayt_gercek_metin  zoom=1.0 (scale=1.4)  piksel=1344x756  png≈65 KB
+   sqlite check_page      ort    9.8 | medyan   10.5 | maks   13.5 ms (n=12)
+   sqlite path()          ort   12.3 | medyan   12.8 | maks   16.4 ms (n=12)
+   fitz.open              ort    5.9 | medyan    6.5 | maks    8.4 ms (n=12)
+   doc[page]              ort    0.2 | medyan    0.1 | maks    0.5 ms (n=12)
+   sqlite annotations     ort   20.4 | medyan   19.9 | maks   24.9 ms (n=12)
+   apply+reload           ort    0.3 | medyan    0.1 | maks    0.9 ms (n=12)
+   get_pixmap             ort   34.6 | medyan   35.7 | maks   38.5 ms (n=12)
+   png encode             ort   52.1 | medyan   51.7 | maks   68.9 ms (n=12)
+   QPixmap png decode     ort   16.3 | medyan   16.0 | maks   17.8 ms (n=12)
+   _toplam                ort  151.9 | medyan  150.8 | maks  171.3 ms (n=12)
+
+slayt_gercek_metin  zoom=2.0 (scale=2.8)  piksel=2688x1512  png≈126 KB
+   sqlite check_page      ort   10.1 | medyan   10.3 | maks   15.1 ms (n=12)
+   sqlite path()          ort   12.6 | medyan   12.6 | maks   16.6 ms (n=12)
+   fitz.open              ort    4.7 | medyan    4.0 | maks    9.6 ms (n=12)
+   doc[page]              ort    0.2 | medyan    0.1 | maks    0.9 ms (n=12)
+   sqlite annotations     ort   18.0 | medyan   16.8 | maks   25.4 ms (n=12)
+   apply+reload           ort    0.2 | medyan    0.1 | maks    0.9 ms (n=12)
+   get_pixmap             ort   68.3 | medyan   68.1 | maks   95.5 ms (n=12)
+   png encode             ort  164.9 | medyan  158.9 | maks  204.1 ms (n=12)
+   QPixmap png decode     ort   57.2 | medyan   54.2 | maks   69.3 ms (n=12)
+   _toplam                ort  336.2 | medyan  327.7 | maks  425.9 ms (n=12)
+
+slayt_gercek_goruntu  zoom=1.0 (scale=1.4)  piksel=1179x834  png≈461 KB
+   sqlite check_page      ort    8.0 | medyan    8.6 | maks   12.9 ms (n=12)
+   sqlite path()          ort    8.6 | medyan    8.0 | maks   12.8 ms (n=12)
+   fitz.open              ort    3.8 | medyan    2.4 | maks    9.5 ms (n=12)
+   doc[page]              ort    0.6 | medyan    0.5 | maks    1.9 ms (n=12)
+   sqlite annotations     ort   13.3 | medyan   14.0 | maks   16.5 ms (n=12)
+   apply+reload           ort    0.4 | medyan    0.4 | maks    0.7 ms (n=12)
+   get_pixmap             ort  112.4 | medyan  113.1 | maks  124.8 ms (n=12)
+   png encode             ort  103.6 | medyan  101.8 | maks  126.1 ms (n=12)
+   QPixmap png decode     ort   17.6 | medyan   17.7 | maks   18.3 ms (n=12)
+   _toplam                ort  268.3 | medyan  266.9 | maks  311.7 ms (n=12)
+
+slayt_gercek_goruntu  zoom=2.0 (scale=2.8)  piksel=2358x1667  png≈1374 KB
+   sqlite check_page      ort    6.8 | medyan    6.4 | maks   11.3 ms (n=12)
+   sqlite path()          ort    8.9 | medyan    9.5 | maks   12.4 ms (n=12)
+   fitz.open              ort    3.1 | medyan    2.4 | maks    6.2 ms (n=12)
+   doc[page]              ort    0.8 | medyan    0.5 | maks    2.2 ms (n=12)
+   sqlite annotations     ort   13.0 | medyan   13.9 | maks   15.1 ms (n=12)
+   apply+reload           ort    2.2 | medyan    1.8 | maks    6.9 ms (n=12)
+   get_pixmap             ort  163.6 | medyan  163.5 | maks  206.4 ms (n=12)
+   png encode             ort  315.8 | medyan  299.9 | maks  401.5 ms (n=12)
+   QPixmap png decode     ort   68.7 | medyan   66.8 | maks   96.3 ms (n=12)
+   _toplam                ort  583.0 | medyan  563.8 | maks  698.1 ms (n=12)
+
+--- lib.render()+QPixmap toplam (gerçek çağrı yolu, ilk 12 sayfa, zoom 1) ---
+   kitap_200              ort  121.6 | medyan  121.6 | maks  133.0 ms (n=12)
+   slayt_120              ort   91.6 | medyan   88.5 | maks  105.6 ms (n=12)
+   slayt_gercek_metin     ort  106.1 | medyan  105.0 | maks  121.1 ms (n=12)
+   slayt_gercek_goruntu   ort  252.3 | medyan  252.5 | maks  281.0 ms (n=12)
+
+=== B. Arayüz: gerçek Window (offscreen 1450x950) ===
+
+--- kitap_200 (200 sayfa) ---
+  açılış (open_doc + ilk render):   684.4 ms | ilk render_visible 2 sayfa üretti: [1, 2] | tıkanma 2 kez, toplam 416 ms, en uzun 383 ms
+  görünen pencere yüksekliği 755 px, zoom 1.00, sayfa yüksekliği 842 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (13431 birim): toplam  1798.8 ms
+     render_visible 1 çağrı: ort  337.6 | medyan  337.6 | maks  337.6 ms (n=1)
+     lib.render 3 sayfa, sayfa başına ort   98.1 | medyan   96.6 | maks  101.8 ms (n=3)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 18 kez, toplam 341 ms, en uzun 37 ms
+  yavaş kaydırma 40 tık: render_visible 12 çağrı | lib.render 6 sayfa | tıkanma 30 kez, toplam 1667 ms, en uzun 292 ms
+  Ctrl+tekerlek 1 adım (zoom 0.89):   981.6 ms | 3 sayfa yeniden üretildi | tıkanma 1 kez, toplam 20 ms, en uzun 20 ms
+  sayfa atlama →100:   693.4 ms | 3 sayfa üretildi | tıkanma yok
+  tek işaretleme sonrası clear_renders: 3 sayfa yeniden üretildi | tıkanma 1 kez, toplam 67 ms, en uzun 67 ms
+  bellekte tutulan sayfa görüntüsü: 0 sayfa, ≈0 MB
+
+--- slayt_120 (120 sayfa) ---
+  açılış (open_doc + ilk render):  1023.6 ms | ilk render_visible 3 sayfa üretti: [1, 2, 3] | tıkanma 4 kez, toplam 818 ms, en uzun 723 ms
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 540 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (13431 birim): toplam  2198.7 ms
+     render_visible 1 çağrı: ort  456.2 | medyan  456.2 | maks  456.2 ms (n=1)
+     lib.render 4 sayfa, sayfa başına ort   97.9 | medyan   98.3 | maks  100.9 ms (n=4)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 27 kez, toplam 526 ms, en uzun 49 ms
+  yavaş kaydırma 40 tık: render_visible 25 çağrı | lib.render 7 sayfa | tıkanma 32 kez, toplam 1519 ms, en uzun 331 ms
+  Ctrl+tekerlek 1 adım (zoom 0.89):   584.2 ms | 5 sayfa yeniden üretildi | tıkanma yok
+  sayfa atlama →60:   408.4 ms | 4 sayfa üretildi | tıkanma yok
+  tek işaretleme sonrası clear_renders: 4 sayfa yeniden üretildi | tıkanma 2 kez, toplam 104 ms, en uzun 62 ms
+  bellekte tutulan sayfa görüntüsü: 4 sayfa, ≈13 MB
+
+--- slayt_gercek_metin (20 sayfa) ---
+  açılış (open_doc + ilk render):  1068.3 ms | ilk render_visible 6 sayfa üretti: [1, 2, 3, 1, 2, 3] | tıkanma 2 kez, toplam 592 ms, en uzun 482 ms
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 540 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (10523 birim): toplam  2348.3 ms
+     render_visible 1 çağrı: ort  489.6 | medyan  489.6 | maks  489.6 ms (n=1)
+     lib.render 3 sayfa, sayfa başına ort  144.0 | medyan  115.6 | maks  218.6 ms (n=3)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 32 kez, toplam 1177 ms, en uzun 580 ms
+  yavaş kaydırma 40 tık: render_visible 0 çağrı | lib.render 0 sayfa | tıkanma 14 kez, toplam 246 ms, en uzun 28 ms
+  Ctrl+tekerlek 1 adım (zoom 0.89):   404.3 ms | 3 sayfa yeniden üretildi | tıkanma 3 kez, toplam 324 ms, en uzun 283 ms
+  sayfa atlama →10:   403.2 ms | 4 sayfa üretildi | tıkanma yok
+  tek işaretleme sonrası clear_renders: 4 sayfa yeniden üretildi | tıkanma 2 kez, toplam 97 ms, en uzun 53 ms
+  bellekte tutulan sayfa görüntüsü: 4 sayfa, ≈13 MB
+
+--- slayt_gercek_goruntu (15 sayfa) ---
+  açılış (open_doc + ilk render):  1433.5 ms | ilk render_visible 4 sayfa üretti: [1, 2, 1, 2] | tıkanma 2 kez, toplam 786 ms, en uzun 634 ms
+  görünen pencere yüksekliği 741 px, zoom 1.00, sayfa yüksekliği 595 birim
+  1 tekerlek tıkı = 111 birim kaydırma (singleStep=37)
+  hızlı kaydırma 120 tık (8542 birim): toplam  2291.5 ms
+     render_visible 1 çağrı: ort  488.4 | medyan  488.4 | maks  488.4 ms (n=1)
+     lib.render 2 sayfa, sayfa başına ort  225.0 | medyan  225.0 | maks  243.1 ms (n=2)
+     aynı sayfa tekrar üretildi: 0 kez | tıkanma 17 kez, toplam 919 ms, en uzun 636 ms
+  yavaş kaydırma 40 tık: render_visible 0 çağrı | lib.render 0 sayfa | tıkanma 12 kez, toplam 248 ms, en uzun 36 ms
+  Ctrl+tekerlek 1 adım (zoom 0.89):   659.9 ms | 3 sayfa yeniden üretildi | tıkanma yok
+  sayfa atlama →7:   957.1 ms | 4 sayfa üretildi | tıkanma yok
+  tek işaretleme sonrası clear_renders: 4 sayfa yeniden üretildi | tıkanma 1 kez, toplam 46 ms, en uzun 46 ms
+  bellekte tutulan sayfa görüntüsü: 0 sayfa, ≈0 MB

@@ -24,8 +24,11 @@ def test_real_stdio_session(tmp_path):
         params=StdioServerParameters(command=sys.executable,args=[str(ROOT/'server.py'),'--data-dir',str(tmp_path/'data'),'--allow-read',str(source)],env={**os.environ,'OKUMA_LINK_DB':str(tmp_path/'link.sqlite3')})
         async with stdio_client(params) as (read,write):
             async with ClientSession(read,write) as s:
-                await s.initialize()
+                startup=await s.initialize()
+                assert 'untrusted source data' in startup.instructions
                 found=await s.list_tools()
+                import re
+                assert all(not re.search('[çğıöşüÇĞİÖŞÜ]',t.description or '') for t in found.tools)
                 assert {'open_reader','close_reader','reader_request_status','read_page_chunk','get_outline','ocr_pages'} <= {t.name for t in found.tools}
                 async def call(name,args={}):
                     r=await s.call_tool(name,args)
@@ -58,6 +61,7 @@ def test_real_stdio_session(tmp_path):
 
 
 def test_mcp_opens_reader_and_reuses_window(tmp_path):
+    (tmp_path/'settings.ini').write_text('[General]\nguncellemeleri_denetle=false\n',encoding='utf-8')
     import signal
     from core import Library
     source=tmp_path/'reader.pdf'

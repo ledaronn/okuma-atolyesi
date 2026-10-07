@@ -123,6 +123,7 @@ BETIK = textwrap.dedent(r"""
 
 
 def test_ingilizce_pencerelerde_turkce_metin_kalmiyor(tmp_path):
+    (tmp_path / "ayar.ini").write_text("[General]\nguncellemeleri_denetle=false\n", encoding="utf-8")
     ortam = dict(os.environ, OKUMA_DIL="en", QT_QPA_PLATFORM="offscreen", PYTHONIOENCODING="utf-8",
                  OKUMA_SETTINGS=str(tmp_path / "ayar.ini"), OKUMA_LINK_DB=str(tmp_path / "link.sqlite3"),
                  APPDATA=str(tmp_path / "appdata"))

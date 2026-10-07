@@ -3,7 +3,7 @@ import os, sys, time, tempfile
 from pathlib import Path
 os.environ['QT_QPA_PLATFORM']='offscreen'
 HERE=Path(__file__).parent
-sys.path.insert(0,str(HERE.parent))
+sys.path.insert(0,str(HERE.parent.parent))
 DATA=Path(tempfile.mkdtemp(prefix='okuma_envanter_'))  # gerçek veri klasörüne dokunmaz
 import pymupdf as fitz
 from PySide6.QtCore import Qt, QPointF, QPoint, QEvent, QTimer
@@ -149,7 +149,7 @@ click(1,455,305)  # not ikonu (point +[-8..20])
 after_note=len(anns())
 click(1,500,700)  # boş alan
 after_empty=len(anns())
-hover_feedback=hasattr(appmod.Reader,'hoverMoveEvent') or 'hover' in open(HERE.parent/'app.py',encoding='utf-8').read().lower()
+hover_feedback=hasattr(appmod.Reader,'hoverMoveEvent') or 'hover' in (HERE.parent.parent/'app.py').read_text(encoding='utf-8').lower()
 row('Silgi','çalışıyor' if (before-after_ink,after_ink-after_hl,after_hl-after_note,after_note-after_empty)==(1,1,1,0) else 'kısmen',f"kalem sil={before-after_ink}, fosfor sil={after_ink-after_hl}, not sil={after_hl-after_note}, boşa tık={after_note-after_empty}; üzerine gelince ne sileceğini GÖSTERMİYOR (hover kodu yok={not hover_feedback}); her tıkta PDF yeniden açılıyor ve tüm görünür sayfalar yeniden üretiliyor")
 
 # ---------- 10. Yer imi ----------
@@ -221,3 +221,8 @@ print(f"  UI: kenar çubuğunda tek QComboBox filtresi; atama 'Başlık / etiket
 print("\n=== Özet tablo ===")
 for t,s,n in rows: print(f"| {t} | {s} | {n} |")
 print("\nUyarı iletileri:",answers['msg'])
+
+# Qt'nin ekran olmadan interpreter kapanisindaki bilinen destructor sorununu atla.
+# Pencereler yukarida normal kapanis akisi ile kapandi; once raporu tamamla.
+sys.stdout.flush()
+os._exit(0)

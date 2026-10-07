@@ -10,8 +10,8 @@ import threading
 import time
 import traceback
 
-from PySide6.QtCore import Qt, QTimer, QSize, QPoint, QPointF, QRectF, QRect, Signal, QObject, QRunnable, QThreadPool, QThread, QLockFile, QSettings, QPropertyAnimation, QVariantAnimation, QEasingCurve, QEvent
-from PySide6.QtGui import QColor, QPen, QBrush, QPixmap, QImage, QIcon, QPainter, QPainterPath, QShortcut, QKeySequence, QCursor, QLinearGradient, QGradient, QActionGroup, QFont
+from PySide6.QtCore import Qt, QTimer, QSize, QPoint, QPointF, QRectF, QRect, Signal, QObject, QRunnable, QThreadPool, QThread, QLockFile, QSettings, QPropertyAnimation, QVariantAnimation, QEasingCurve, QEvent, QUrl
+from PySide6.QtGui import QColor, QPen, QBrush, QPixmap, QImage, QIcon, QPainter, QPainterPath, QShortcut, QKeySequence, QCursor, QLinearGradient, QGradient, QActionGroup, QFont, QDesktopServices
 from PySide6.QtWidgets import (QApplication, QFrame, QTreeWidget, QTreeWidgetItem, QScrollArea, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
     QPushButton, QLabel, QLineEdit, QListWidget, QListWidgetItem, QStackedWidget,
     QSplitter, QComboBox, QSpinBox, QDoubleSpinBox, QFileDialog, QMessageBox,
@@ -21,6 +21,8 @@ from PySide6.QtWidgets import (QApplication, QFrame, QTreeWidget, QTreeWidgetIte
 
 from core import Library, list_libraries, register_library, unregister_library, library_name, set_default_data_dir, is_library_dir
 from assistant_link import AssistantLink, TASKS
+from guncelleme import Denetleyici
+from surum import SURUM
 from ceviri import t as _t, buyuk
 
 # İki uygulama teması. Okuma zemini (Kağıt/Sıcak/Loş/Gece) bundan ayrı, Reader.set_read_mode ile.
@@ -1176,6 +1178,8 @@ class Window(QMainWindow):
     def __init__(self,lib,lock=None):
         super().__init__(); self.lib=lib; self.lock=lock; self.doc_id=None; self.jobs=set(); self.busy=False; self.filter='all'
         self.assistant_link=AssistantLink(lib.root); self.assistant_request=None; self.assistant_source=None; self.note_drafts={}
+        self._guncelleme=Denetleyici('okuma-atolyesi',SURUM,Path(user_settings().fileName()).parent/'guncelleme.json')
+        self._guncelleme_surumu=''
         self.setWindowTitle(_t('Okuma Atölyesi')); self.resize(1450,950); self.setMinimumSize(1100,720)
         self.lib.start_render_process()  # ilk belge açılmadan ısınsın
         self.tracker=StudyTracker(self.lib,lambda:QApplication.applicationState()==Qt.ApplicationState.ApplicationActive and not self.isMinimized(),parent=self)
@@ -1191,6 +1195,11 @@ class Window(QMainWindow):
         h.addWidget(self.global_search); h.addWidget(button(_t('Ara'),self.global_find)); h.addWidget(button(_t('+ PDF ekle'),self.import_dialog,True))
         self.view_button=QToolButton(); self.view_button.setText(_t(' Görünüm')); self.view_button.setToolButtonStyle(Qt.ToolButtonStyle.ToolButtonTextBesideIcon); self.view_button.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup); h.addWidget(self.view_button); outer.addWidget(header); self.header=header
         self.progress=QProgressBar(); self.progress.hide(); outer.addWidget(self.progress)
+        self.guncelleme_cubugu=QWidget(); update_row=QHBoxLayout(self.guncelleme_cubugu); update_row.setContentsMargins(16,4,16,4)
+        self.guncelleme_metni=label(''); update_row.addWidget(self.guncelleme_metni); update_row.addStretch()
+        self.guncelleme_indir=button(_t('İndir'),lambda:QDesktopServices.openUrl(QUrl('https://github.com/ledaronn/okuma-atolyesi/releases'))); update_row.addWidget(self.guncelleme_indir)
+        self.guncelleme_kapa=button('×',self.guncelleme_kapat); self.guncelleme_kapa.setToolTip(_t('Bildirimi kapat')); self.guncelleme_kapa.setAccessibleName(_t('Bildirimi kapat')); update_row.addWidget(self.guncelleme_kapa)
+        self.guncelleme_cubugu.hide(); outer.addWidget(self.guncelleme_cubugu)
         split=QSplitter(); outer.addWidget(split,1)
         side=QWidget(); side.setObjectName('sidebar'); sl=QVBoxLayout(side); sl.setContentsMargins(14,14,14,12); sl.setSpacing(8)
         # Sol panel: en üstte AÇIK KÜTÜPHANE (yalnızca buradan değiştirilir); altında arama, süzgeç ve raf ağacı.
@@ -1211,6 +1220,8 @@ class Window(QMainWindow):
         tools_menu=QToolButton(); tools_menu.setText(_t('Araçlar  ▾')); tools_menu.setPopupMode(QToolButton.ToolButtonPopupMode.InstantPopup); lm=QMenu(tools_menu)
         lm.addAction(_t('Yeni belge (Word)'),self.yeni_belge); lm.addAction(_t('Belge aç (.docx)…'),self.belge_ac); lm.addSeparator(); lm.addAction(_t('PDF’leri birleştir'),self.merge_dialog); lm.addAction(_t('Kütüphaneyi yedekle'),self.backup); lm.addAction(_t('Veri klasörünü aç'),self.open_data); lm.addAction(_t('Veri klasörünü taşı…'),self.move_data); lm.addSeparator(); lm.addAction(_t('Klavye kısayolları\tF1'),self.show_shortcuts); lm.addAction(_t('Kullanım rehberi'),self.help); lm.addSeparator(); lm.addAction(_t('Varsayılan uygulama…'),self.varsayilan_uygulama); self.dil_menusu(lm); tools_menu.setMenu(lm); sl.addWidget(tools_menu)
         sl.addWidget(label(_t('Yerelde saklanır · Otomatik kayıt'),'subtitle')); split.addWidget(side); self.side=side
+        lm.addSeparator(); self.guncelleme_eylemi=lm.addAction(_t('Güncellemeleri denetle')); self.guncelleme_eylemi.setCheckable(True)
+        self.guncelleme_eylemi.setChecked(self.guncelleme_acik()); self.guncelleme_eylemi.toggled.connect(self.guncelleme_ayarla)
         self.stack=QStackedWidget(); split.addWidget(self.stack); split.setSizes([235,1215]); split.setStretchFactor(1,1)
         self.build_shelf(); self.build_reader(); self.build_results(); self.stack.currentChanged.connect(self.page_changed)
         self.view_button.setMenu(self.build_view_menu(self.view_button))
@@ -1233,6 +1244,27 @@ class Window(QMainWindow):
         # T ve N: liste/ağaç gibi harfleri kendine alan widget'larda da çalışsın (metin kutularında değil)
         QApplication.instance().installEventFilter(self)
         self.apply_theme(self.reader.settings.value('theme','light'))
+        self._guncelleme.baslat(self.guncelleme_acik())
+
+    def guncelleme_acik(self):
+        return user_settings().value('guncellemeleri_denetle',True) in (True,'true','1')
+
+    def guncelleme_ayarla(self,acik):
+        user_settings().setValue('guncellemeleri_denetle',bool(acik))
+        self._guncelleme.baslat(bool(acik))
+        self.guncelleme_goster()
+
+    def guncelleme_goster(self):
+        veri=self._guncelleme.bildirim(self.guncelleme_acik())
+        if not veri:
+            self.guncelleme_cubugu.hide(); return
+        self._guncelleme_surumu=veri['surum']
+        self.guncelleme_metni.setText(_t('Sürüm {surum} hazır',surum=veri['surum']))
+        self.guncelleme_cubugu.show()
+
+    def guncelleme_kapat(self):
+        self._guncelleme.kapat(self._guncelleme_surumu)
+        self.guncelleme_cubugu.hide()
 
     def build_shelf(self):
         """Kitaplık: Steam kütüphanesi gibi raf satırları. Üstte Devam et; sonra 'Tüm belgeler', her raf ve Rafsız satırı."""
@@ -1490,6 +1522,9 @@ class Window(QMainWindow):
     def toggle_strip_pin(self, checked=None):
         self.strip_pinned=not self.strip_pinned if checked is None else bool(checked)
         self.reader.settings.setValue('strip_pinned',self.strip_pinned); self.pin_btn.setChecked(self.strip_pinned)
+        # Kayan seridin eski animasyonu, sabit layout konumunu sonradan ezmesin.
+        anim=getattr(self.strip,'_anim',None)
+        if anim is not None: anim.stop()
         if self.strip_pinned: self.reader_vertical.insertWidget(0,self.strip)
         else: self.reader_vertical.removeWidget(self.strip)
         self.strip.show(); self.show_strip(); self.layout_overlays()
@@ -1498,7 +1533,7 @@ class Window(QMainWindow):
         self.assistant_panel=QWidget(); self.assistant_panel.setObjectName('panel'); self.assistant_panel.setFixedWidth(340)
         panel=QVBoxLayout(self.assistant_panel); panel.setContentsMargins(14,14,14,14); panel.setSpacing(10)
         head=QHBoxLayout(); head.addWidget(label(_t('ASİSTAN'),'subtitle')); head.addStretch(); head.addWidget(tool_button('close',_t('Asistan panelini kapat'),self.toggle_assistant)); panel.addLayout(head)
-        self.assistant_status=label(_t('Limina bağlantısı bekleniyor'),'muted'); self.assistant_status.setWordWrap(True); panel.addWidget(self.assistant_status)
+        self.assistant_status=label(_t('Pevrai bağlantısı bekleniyor'),'muted'); self.assistant_status.setWordWrap(True); panel.addWidget(self.assistant_status)
         self.assistant_context=label('','striptitle'); self.assistant_context.setWordWrap(True); panel.addWidget(self.assistant_context)
         self.assistant_preview=QTextEdit(); self.assistant_preview.setReadOnly(True); self.assistant_preview.setMaximumHeight(135); self.assistant_preview.setPlaceholderText(_t('Metin seç veya açık sayfayı kullan.')); panel.addWidget(self.assistant_preview)
         for entries in ((('explain',_t('Açıkla')),('summarize',_t('Özetle'))),(('translate',_t('Çevir')),('questions',_t('Soru hazırla')))):
@@ -1506,7 +1541,7 @@ class Window(QMainWindow):
             for task,title in entries:
                 action=button(title,lambda checked=False,t=task:self.ask_assistant(t)); action.setIcon(tool_icon({'explain':'assistant','summarize':'note','translate':'switch','questions':'reading'}[task])); row.addWidget(action)
             panel.addLayout(row)
-        self.assistant_reply=QTextEdit(); self.assistant_reply.setReadOnly(True); self.assistant_reply.setPlaceholderText(_t('Yanıt burada görünecek. Onay isteyen işlemleri Limina’dan yanıtlayabilirsin.')); panel.addWidget(self.assistant_reply,1)
+        self.assistant_reply=QTextEdit(); self.assistant_reply.setReadOnly(True); self.assistant_reply.setPlaceholderText(_t('Yanıt burada görünecek. Onay isteyen işlemleri Pevrai’dan yanıtlayabilirsin.')); panel.addWidget(self.assistant_reply,1)
         self.assistant_source_label=label('','muted'); self.assistant_source_label.setWordWrap(True); panel.addWidget(self.assistant_source_label)
         panel.addWidget(button(_t('Kaynak sayfasına dön'),self.assistant_go_source))
         self.assistant_projects=QComboBox(); self.assistant_projects.setToolTip(_t('Notun bağlanacağı proje (isteğe bağlı)')); self.assistant_projects.addItem(_t('Projeye bağlama'),None); panel.addWidget(self.assistant_projects)
@@ -1545,7 +1580,7 @@ class Window(QMainWindow):
             text=self.reader.selection or self.lib.read_chunk(source['document_id'],source['page'])['text']
         if not text.strip(): self.say(_t('Bu sayfada okunabilir metin yok. ⋯ → OCR ile metin dizini oluştur.')); return
         self.assistant_request=self.assistant_link.send(task,source['document_id'],source['page'],source['title'],text,self.assistant_projects.currentData())
-        self.assistant_panel.show(); self.assistant_status.setText(_t('İstek Limina’ya gönderildi.'))
+        self.assistant_panel.show(); self.assistant_status.setText(_t('İstek Pevrai’ya gönderildi.'))
         if task!='save_note':
             self.assistant_source=dict(source); self.assistant_source_label.setText(_t("İstek kaynağı: {baslik} · s.{sayfa}",baslik=source['title'],sayfa=source['page']))
             self.assistant_reply.clear(); self._assistant_last_reply=None
@@ -1562,7 +1597,7 @@ class Window(QMainWindow):
 
     def cancel_assistant(self):
         if self.assistant_request: self.assistant_link.cancel_pending(self.assistant_request)
-        self.say(_t('Bekleyen istek iptal edildi. Çalışan isteği Limina’daki Durdur ile durdurabilirsin.'))
+        self.say(_t('Bekleyen istek iptal edildi. Çalışan isteği Pevrai’daki Durdur ile durdurabilirsin.'))
 
     def poll_assistant(self):
         peer=self.assistant_link.peer(); signature=json.dumps(peer['projects'])
@@ -1570,11 +1605,11 @@ class Window(QMainWindow):
             self._project_signature=signature; selected=self.assistant_projects.currentData(); self.assistant_projects.clear(); self.assistant_projects.addItem(_t('Projeye bağlama'),None)
             for p in peer['projects']: self.assistant_projects.addItem(p['name'],p['id'])
             self.assistant_projects.setCurrentIndex(max(0,self.assistant_projects.findData(selected)))
-        if not self.assistant_request: self.assistant_status.setText(_t('Limina bağlı') if peer['connected'] else _t('Limina’yı açarak bağlan')); return
+        if not self.assistant_request: self.assistant_status.setText(_t('Pevrai bağlı') if peer['connected'] else _t('Pevrai’yı açarak bağlan')); return
         result=self.assistant_link.request(self.assistant_request)
         if result:
-            self.assistant_status.setText({'pending':_t('Limina’nın boşalması bekleniyor…'),'running':_t('Limina yanıt hazırlıyor…'),'done':_t('Tamamlandı'),'error':_t('İşlem tamamlanamadı'),'cancelled':_t('İptal edildi')}.get(result['status'],result['status']))
-            if not peer['connected'] and result['status'] in ('pending','running'): self.assistant_status.setText(_t('Limina bağlantısı kesildi; yanıt bekleniyor.'))
+            self.assistant_status.setText({'pending':_t('Pevrai’nın boşalması bekleniyor…'),'running':_t('Pevrai yanıt hazırlıyor…'),'done':_t('Tamamlandı'),'error':_t('İşlem tamamlanamadı'),'cancelled':_t('İptal edildi')}.get(result['status'],result['status']))
+            if not peer['connected'] and result['status'] in ('pending','running'): self.assistant_status.setText(_t('Pevrai bağlantısı kesildi; yanıt bekleniyor.'))
             if json.loads(result['payload']).get('task')=='save_note' and result['reply']:
                 self.assistant_status.setText(result['reply'].split('\n')[0]); return
             if result['reply'] and result['reply']!=getattr(self,'_assistant_last_reply',None):
@@ -2257,10 +2292,11 @@ class Window(QMainWindow):
         QDesktopServices.openUrl(QUrl.fromLocalFile(str(self.lib.root)))
 
     def help(self):
-        QMessageBox.information(self,_t('Kullanım'), _t('PDF ekle veya dosyaları pencereye bırak. Belgeyi çift tıklayarak aç. Kartları ya da soldaki belgeleri sürükleyip bir rafa, ağaçtaki raf başlığına ya da “Yeni raf ekle” adasına bırak.\n\nKütüphane: sol üstteki düğmeden değiştirilir; her kütüphane ayrı bir klasördür (Yeni kütüphane… / Var olan klasörü ekle…).\n\nKalem: sürükleyerek çiz. Fosfor/alt çizgi: metnin çevresini sürükle. Metin seç: seçimi panoya kopyalar. Not: sayfaya tıkla. Silgi: bu uygulamada eklenmiş işaretlemeye tıkla.\n\nCtrl+O: ekle · Ctrl+Z: geri al · Ctrl+Shift+Z: yinele\nCtrl+tekerlek: yakınlaştır · Ctrl+S: PDF dışa aktar\nT: araç adası · N: panel · F11: tam ekran · Esc: kapat / kitaplık\nÜst şerit için fareyi üst kenara götür.\n\nNotlar ve okuma konumu otomatik saklanır. “PDF kaydet” işaretlemeleri PDF dosyasına işler. OCR için ayrıca Tesseract gerekir. AI bağlantısı için CLAUDE_ENTEGRASYON.md dosyasını kullan.'))
+        QMessageBox.information(self,_t('Kullanım'), _t('PDF ekle veya dosyaları pencereye bırak. Belgeyi çift tıklayarak aç. Kartları ya da soldaki belgeleri sürükleyip bir rafa, ağaçtaki raf başlığına ya da “Yeni raf ekle” adasına bırak.\n\nKütüphane: sol üstteki düğmeden değiştirilir; her kütüphane ayrı bir klasördür (Yeni kütüphane… / Var olan klasörü ekle…).\n\nKalem: sürükleyerek çiz. Fosfor/alt çizgi: metnin çevresini sürükle. Metin seç: seçimi panoya kopyalar. Not: sayfaya tıkla. Silgi: bu uygulamada eklenmiş işaretlemeye tıkla.\n\nCtrl+O: ekle · Ctrl+Z: geri al · Ctrl+Shift+Z: yinele\nCtrl+tekerlek: yakınlaştır · Ctrl+S: PDF dışa aktar\nT: araç adası · N: panel · F11: tam ekran · Esc: kapat / kitaplık\nÜst şerit için fareyi üst kenara götür.\n\nNotlar ve okuma konumu otomatik saklanır. “PDF kaydet” işaretlemeleri PDF dosyasına işler. OCR için ayrıca Tesseract gerekir. AI bağlantısı için docs/CLAUDE_ENTEGRASYON.md dosyasını kullan.'))
 
     @safe
     def poll(self):
+        self.guncelleme_goster()
         self.publish_context(); self.poll_assistant()
         for cmd in self.lib.pending_reader_commands():
             if self.busy or QApplication.activeModalWidget() is not None or self.note_editor.document().isModified():

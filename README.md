@@ -1,4 +1,4 @@
-# Okuma Atölyesi 1.0
+# Okuma Atölyesi
 
 **Belgelerin için sakin bir çalışma alanı:** kendi bilgisayarında çalışan bir PDF kütüphanesi ve okuyucusu, üstüne Word benzeri bir belge editörü. İnternet ya da hesap gerekmez; her şey senin klasöründe kalır.
 
@@ -7,14 +7,14 @@
 - **PDF araçları:** birleştir, sayfa düzenle, OCR (taranmış sayfalar), yedekle/geri yükle.
 - **Belge editörü:** sıfırdan `.docx` yaz. Biçimlendirme, listeler, tablolar, resimler, sayfa düzeni, üst/alt bilgi, PDF'e aktarma ve yazdırma var; tam Word gücü gerektiğinde tek tıkla LibreOffice'te açılır.
 - **Varsayılan uygulama:** `.pdf` ve `.docx` dosyaları çift tıklayınca Okuma Atölyesi'nde açılabilir.
-- **Yapay zekâ bağlantısı (isteğe bağlı):** MCP sunucusu sayesinde Limina, Claude Desktop gibi asistanlar kütüphanendeki belgeleri okuyabilir.
+- **Yapay zekâ bağlantısı (isteğe bağlı):** MCP sunucusu sayesinde Pevrai, Claude Desktop gibi asistanlar kütüphanendeki belgeleri okuyabilir.
 
 <p>
   <img src="onizleme/kutuphane.png" alt="Kütüphane" width="49%">
   <img src="onizleme/okuyucu.png" alt="Okuyucu" width="49%">
 </p>
 
-Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
+Pevrai'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
 
 > **In English.** Okuma Atölyesi ("Reading Workshop") is a local PDF library and reader with a
 > Word-like document editor. Highlight, draw, annotate and bookmark PDFs; organize them with
@@ -33,6 +33,17 @@ Limina'dan bağımsızdır: onun kodunu içe aktarmaz, ona dokunmaz.
 > License: AGPL-3.0.
 
 ## İndir
+
+**Araçlar ▾ → Güncellemeleri denetle** açıkken, açılışta arka planda en fazla
+24 saatte bir GitHub'dan yeni kararlı sürüm bilgisi alınır. Bu ayarı kapatabilirsin.
+Kitaplığın, belge içerikleri ve kişisel ayarların gönderilmez. Bağlantı hataları sessizdir;
+kapatılabilir bildirimdeki **İndir** Releases sayfasını açar, kurulum elle yapılır.
+Uygulama çevrimdışı çalışmaya devam eder.
+
+The optional **Tools ▾ → Check for updates** setting checks GitHub at most once
+every 24 hours. It sends no library files or personal settings, stays silent offline,
+and offers a dismissible notice linking to Releases. Installation remains manual.
+The application and build script share the version constant in `surum.py`.
 
 **[⬇ Okuma Atölyesi'ni indir (Windows)](https://github.com/ledaronn/okuma-atolyesi/releases/latest)**: son sürümde *Assets* altındaki `OkumaAtolyesi-Setup-<sürüm>.exe` dosyasını çalıştır. Windows 10/11, 64 bit; Python ya da yönetici izni gerekmez. Kurulum programı henüz imzalı olmadığı için Windows "Bilgisayarınız korundu" diyebilir: **Ek bilgi → Yine de çalıştır**. Kaldırma Ayarlar › Uygulamalar'dan; kitaplığın silinmez.
 
@@ -117,15 +128,15 @@ açar; orada Okuma Atölyesi'ni seç (Windows programların kendini sessizce var
 vermez). Çift tıklanan PDF kitaplığa eklenir (aynı dosya zaten varsa o belge açılır); okuyucu
 açıksa o pencerede açılır. **Kaydı kaldır** aynı pencerede.
 
-## Limina ile doğrudan çalışma
+## Pevrai ile doğrudan çalışma
 
-Üst şeritteki **Asistan** düğmesi, PDF'nin yanında Açıkla / Özetle / Çevir / Soru hazırla panelini açar. Metin seçince aynı işlemler alttaki küçük seçim şeridinde görünür. Limina açık olmalıdır; bağlantı durumu panelde belirtilir. Yanıt kaynak belge/sayfa bilgisiyle geri gelir. Seçim yoksa sayfanın ilk 3000 karakterlik bölümü kullanılır; devamı varsa belirtilir.
+Üst şeritteki **Asistan** düğmesi, PDF'nin yanında Açıkla / Özetle / Çevir / Soru hazırla panelini açar. Metin seçince aynı işlemler alttaki küçük seçim şeridinde görünür. Pevrai açık olmalıdır; bağlantı durumu panelde belirtilir. Yanıt kaynak belge/sayfa bilgisiyle geri gelir. Seçim yoksa sayfanın ilk 3000 karakterlik bölümü kullanılır; devamı varsa belirtilir.
 
-**Seçimi Smart Notes'a kaydet** ve **Yanıtı Smart Notes'a kaydet** kaynak bağlantısını korur; istenirse listeden proje seçilir. Bu eklentiler Limina'da etkin olmalıdır. Kaynak bağlantısı sohbetten veya nottan doğru PDF sayfasına döner. Çalışan isteği Limina'dan durdurun; paneldeki iptal yalnızca bekleyen isteği iptal eder.
+**Seçimi Smart Notes'a kaydet** ve **Yanıtı Smart Notes'a kaydet** kaynak bağlantısını korur; istenirse listeden proje seçilir. Bu eklentiler Pevrai'da etkin olmalıdır. Kaynak bağlantısı sohbetten veya nottan doğru PDF sayfasına döner. Çalışan isteği Pevrai'dan durdurun; paneldeki iptal yalnızca bekleyen isteği iptal eder.
 
 Üst şeritteki **iğne** düğmesi otomatik gizlenmeyi kapatır; tercih hatırlanır. Not editörünün kaydedilmemiş taslağı belge değişiminde ve normal kapanışta yerel ayarlarda korunur.
 
-İstek/yanıt kuyruğu `%APPDATA%/OkumaAtolyesi/assistant.sqlite3` dosyasıdır; okuyucu Limina'nın kodunu içe aktarmaz. Bağlantı, kullanıcı tıkladığında mevcut Limina modelini kullanır. Temel PDF okuma bağımsız ve çevrimdışı kalır.
+İstek/yanıt kuyruğu `%APPDATA%/OkumaAtolyesi/assistant.sqlite3` dosyasıdır; okuyucu Pevrai'nın kodunu içe aktarmaz. Bağlantı, kullanıcı tıkladığında mevcut Pevrai modelini kullanır. Temel PDF okuma bağımsız ve çevrimdışı kalır.
 
 ## Okuyucuyu kullan
 
@@ -224,7 +235,7 @@ Tesseract kurulum kaynakları: [resmî kurulum belgeleri](https://tesseract-ocr.
 
 ## AI bağlantısı
 
-`CLAUDE_ENTEGRASYON.md` dosyasını Claude'a ver. Ana projede bağlantıyı Claude ekleyebilir. Bu paket mevcut projede değişiklik yapmaz, API anahtarı istemez ve kendi başına model çağırmaz.
+`docs/CLAUDE_ENTEGRASYON.md` dosyasını Claude'a ver. Ana projede bağlantıyı Claude ekleyebilir. Bu paket mevcut projede değişiklik yapmaz, API anahtarı istemez ve kendi başına model çağırmaz.
 
 Bağlantıdan sonra örnek istekler:
 
@@ -261,7 +272,7 @@ Geri yüklemek için okuyucuyu ve MCP sunucusunu kapat. Güvendiğin, bu uygulam
 .venv\Scripts\python.exe -m pytest tests -q
 ```
 
-Doğrulama kapsamı ve gerçek test sonucu `TEST_RAPORU.md` dosyasındadır. Windows üzerinde kullanıcı cihazı testi henüz yapılmadı.
+Doğrulama kapsamı ve gerçek test sonucu `docs/TEST_RAPORU.md` dosyasındadır. Windows üzerinde kullanıcı cihazı testi henüz yapılmadı.
 
 ## Dosya yapısı
 

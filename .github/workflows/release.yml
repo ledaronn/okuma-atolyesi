@@ -33,9 +33,9 @@ jobs:
         if: startsWith(github.ref, 'refs/tags/')
         shell: bash
         run: |
-          surum=$(python -c "import re;print(re.search(r'^SURUM = \"(.+)\"', open('packaging/build.py',encoding='utf-8').read(), re.M).group(1))")
+          surum=$(python -c "from surum import SURUM; print(SURUM)")
           if [ "v$surum" != "${GITHUB_REF_NAME}" ]; then
-            echo "Etiket ${GITHUB_REF_NAME}, packaging/build.py SURUM $surum: once surumu guncelle."; exit 1; fi
+            echo "Etiket ${GITHUB_REF_NAME}, surum.py SURUM $surum: once surumu guncelle."; exit 1; fi
 
       - name: Bagimliliklar
         run: |

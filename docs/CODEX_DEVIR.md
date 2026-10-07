@@ -7,7 +7,7 @@ Codex döndüğünde **neyin değiştiğini** tek yerden görsün diye tutulur. 
 
 - Commit `490a407` — Codex'in kaydedilmemiş değişiklikleri **olduğu gibi** kaydedildi (içeriğe
   dokunulmadı): `app.py`, `core.py`, `server.py`, `mcp_dogrula.py`, `README.md`,
-  `CLAUDE_ENTEGRASYON.md`, `tests/test_*.py`, yeni `assistant_link.py`.
+  `docs/CLAUDE_ENTEGRASYON.md`, `tests/test_*.py`, yeni `assistant_link.py`.
 - Kaydetmeden önce: `pytest tests` → 38 geçti, 1 atlandı.
 - Codex devam ederken: `git log 490a407..` Claude'un bundan sonraki bütün değişikliklerini gösterir.
 

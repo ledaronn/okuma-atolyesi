@@ -22,7 +22,8 @@ from pathlib import Path
 KOK = Path(__file__).resolve().parent.parent
 DIST = KOK / "dist" / "OkumaAtolyesi"
 EXE = DIST / "OkumaAtolyesi.exe"
-SURUM = "1.1.0"
+sys.path.insert(0, str(KOK))
+from surum import SURUM
 ISCC_ADAYLARI = [Path(r"C:\Program Files (x86)\Inno Setup 6\ISCC.exe"),
                  Path(r"C:\Program Files\Inno Setup 6\ISCC.exe")]
 

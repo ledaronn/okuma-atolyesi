@@ -38,7 +38,7 @@ Ortam: Linux, Python 3.12.14, PyMuPDF 1.26.6, Qt/PySide6 Essentials 6.11.2, MCP 
 ## Henüz doğrulanmayanlar
 
 - Kullanıcının Windows bilgisayarında kurulum ve masaüstü çalıştırma.
-- Gerçek Limina MCP köprüsüyle birlikte çalışma. Bağımsız MCP istemcisiyle test edildi; ana projeye dokunulmadı.
+- Gerçek Pevrai MCP köprüsüyle birlikte çalışma. Bağımsız MCP istemcisiyle test edildi; ana projeye dokunulmadı.
 - Fiziksel kalem/dokunmatik ekran. Basınç ve avuç içi reddi bu sürümde uygulanmadı.
 - Türkçe Tesseract modeli. Türkçe metinli normal PDF ve Türkçe notlar doğrulandı; OCR testi İngilizce modelle yapıldı.
 - Çok büyük belgeler ve binlerce dosyalı koleksiyonlar için yük testi.
