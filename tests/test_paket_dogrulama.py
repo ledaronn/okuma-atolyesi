@@ -95,7 +95,7 @@ class PackageProbes(unittest.TestCase):
         self.assertEqual(env['PYTHON_KEYRING_BACKEND'], 'keyring.backends.null.Keyring')
         for key in ('USERPROFILE','HOME','APPDATA','LOCALAPPDATA','PEVRAI_VEKIL_KOK',
                     'OKUMA_DATA_DIR','OKUMA_LINK_DB','OKUMA_SETTINGS'):
-            self.assertTrue(Path(env[key]).is_relative_to(Path(self.tmp.name)/'fresh'))
+            self.assertTrue(Path(env[key]).is_relative_to((Path(self.tmp.name)/'fresh').resolve()))
 
 
 if __name__ == '__main__':
