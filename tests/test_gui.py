@@ -87,25 +87,42 @@ def test_background_callback_on_gui_thread(window,qt):
     assert not w.busy and w.stack.isEnabled() and not w.reader.suspended
 
 
-def test_rendering_never_blocks_gui_thread(window,qt):
-    """Sayfa üretimi UI iş parçacığında değil; kaydırma ve yakınlaştırma sırasında olay döngüsü turu 16 ms'i aşmaz."""
+def test_rendering_never_blocks_gui_thread(window,qt,monkeypatch):
+    """Üretici beklerken Qt zamanlayıcısı ve kaydırma çalışır; üretim UI dışında kalır."""
     import time
     from core import PageRenderer
+    from PySide6.QtCore import QTimer
     w,lib,d=window; reader=w.reader; main=threading.get_ident(); seen=[]
+    entered=threading.Event(); resume=threading.Event(); ticks=[]
     orig=PageRenderer.render
     def spy(self,page,scale):
-        seen.append(threading.get_ident()); return orig(self,page,scale)
-    PageRenderer.render=spy
+        current=threading.get_ident(); seen.append(current); entered.set()
+        if current!=main and not resume.wait(10):
+            raise TimeoutError('Test sayfa üreticisini serbest bırakmadı')
+        return orig(self,page,scale)
+    monkeypatch.setattr(PageRenderer,'render',spy)
+    timer=QTimer(); timer.setInterval(10)
+    timer.timeout.connect(lambda: ticks.append(threading.get_ident())
+                          if entered.is_set() and not resume.is_set() else None)
     try:
         reader.go(1); reader.set_zoom(2.0)
-        longest=0; start=time.perf_counter()
-        while time.perf_counter()-start<1.5:
+        timer.start(); end=time.perf_counter()+5
+        while len(ticks)<3 and time.perf_counter()<end:
             reader.verticalScrollBar().setValue(reader.verticalScrollBar().value()+40)
-            t=time.perf_counter(); qt.processEvents(); longest=max(longest,time.perf_counter()-t); time.sleep(.004)
-    finally: PageRenderer.render=orig
+            qt.processEvents(); time.sleep(.004)
+        assert entered.is_set() and main not in seen, 'üretim UI iş parçacığında çağrıldı'
+        assert len(ticks)>=3 and all(t==main for t in ticks), 'üretici beklerken Qt olay döngüsü çalışmadı'
+    finally:
+        resume.set(); timer.stop()
+    end=time.perf_counter()+5
+    while time.perf_counter()<end:
+        qt.processEvents()
+        if any(item.data(0)==reader.target_scale() and item.data(1)==reader.generation
+               for item in reader.rendered.values()): break
+        time.sleep(.004)
     assert seen and main not in seen, 'üretim UI iş parçacığında çağrıldı'
-    assert reader.rendered, 'sayfa görüntüsü gelmedi'
-    assert longest<.05, f'olay döngüsü turu {longest*1000:.0f} ms bloke oldu'
+    assert any(item.data(0)==reader.target_scale() and item.data(1)==reader.generation
+               for item in reader.rendered.values()), 'güncel yakınlaştırmada sayfa görüntüsü gelmedi'
     # Yakınlaştırmada eski görüntü yerinde kalır; beyaz yanıp sönme yok.
     before=dict(reader.rendered); reader.set_zoom(1.0)
     assert reader.rendered==before
