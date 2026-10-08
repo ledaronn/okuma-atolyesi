@@ -40,7 +40,12 @@ jobs:
       - name: Bagimliliklar
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt pyinstaller==6.22.3
+          pip install -r requirements.txt pytest pyinstaller==6.22.3
+
+      - name: Kaynak testleri (yayin kapisi)
+        env:
+          QT_QPA_PLATFORM: offscreen
+        run: python -m pytest tests -q
 
       - name: Inno Setup
         shell: pwsh
@@ -63,6 +68,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: OkumaAtolyesi-Setup
+          if-no-files-found: error
           path: |
             dist/OkumaAtolyesi-Setup-*.exe
             dist/SHA256SUMS.txt

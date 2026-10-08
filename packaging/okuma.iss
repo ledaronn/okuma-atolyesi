@@ -6,7 +6,7 @@
 ; kaydını (HKCU) temizler.
 
 #ifndef Surum
-  #define Surum "1.0.0"
+  #define Surum "1.1.1"
 #endif
 #ifndef Kok
   #define Kok ".."

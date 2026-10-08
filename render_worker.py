@@ -9,6 +9,7 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 from core import render_page_samples
+from surum import SURUM
 
 
 def main():
@@ -20,7 +21,7 @@ def main():
         try:
             req=json.loads(line)
             data,w,h,stride,channels=render_page_samples(req['path'],int(req['page']),float(req['scale']),req.get('annotations') or (),cache,bool(req.get('alpha')))
-            stdout.write((json.dumps({'id':req.get('id'),'w':w,'h':h,'stride':stride,'n':len(data),'channels':channels})+'\n').encode('utf-8')); stdout.write(data)
+            stdout.write((json.dumps({'id':req.get('id'),'w':w,'h':h,'stride':stride,'n':len(data),'channels':channels,'version':SURUM})+'\n').encode('utf-8')); stdout.write(data)
         except Exception as e:
             stdout.write((json.dumps({'id':req.get('id'),'error':str(e)})+'\n').encode('utf-8'))
         stdout.flush()

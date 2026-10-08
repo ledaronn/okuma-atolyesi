@@ -1,9 +1,16 @@
 ## İndir
 
-**1.1.0 yenilikleri / What's new:** Belge editörü baştan tasarlandı: Word benzeri ikonlu şerit, adlandırılmış gruplar,
-hızlı erişim, kes/kopyala/yapıştır. *Redesigned document editor: Word-style ribbon with icons.* İngilizce arayüz. Dil Windows görüntüleme diline göre seçilir;
-**Araçlar ▾ → Dil / Language** ile değiştirilebilir. *English interface; follows the Windows display language,
-switch it in Tools ▾ → Dil / Language.*
+**1.1.1 yenilikleri / What's new:**
+
+- İsteğe bağlı günlük güncelleme bildirimi; indirme ve kurulum elle yapılır.
+- MCP araç açıklamaları İngilizce; mevcut araç ve parametre adları korunur.
+- Sabitlenen araç şeridindeki animasyon hatası düzeltildi.
+- Pevrai bağlantısı ve belge yolları güncellendi. Kaynak testleri yayın kapısıdır;
+  paket sürümü, PDF çizimi, MCP yanıtı ve pencere ayrı geçici verilerle doğrulanır.
+
+*Optional daily update notification, English MCP descriptions, pinned ribbon animation
+fix and updated Pevrai integration. Releases require passing source tests and isolated
+checks of the packaged version, PDF rendering, MCP response and reader window.*
 
 **OkumaAtolyesi-Setup.exe**: Windows 10/11, 64 bit. Python ya da yönetici izni gerekmez.
 

@@ -11,13 +11,14 @@ mu, okuyucu penceresi açılıp ayakta kalıyor mu. Doğrulanmayan paket
 """
 from __future__ import annotations
 
-import json
-import os
 import shutil
 import subprocess
 import sys
-import time
+import tempfile
 from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent))
+from dogrulama import ortam as dogrulama_ortami, pencere_dogrula, sorgula
 
 KOK = Path(__file__).resolve().parent.parent
 DIST = KOK / "dist" / "OkumaAtolyesi"
@@ -46,64 +47,37 @@ def pyinstaller() -> None:
     print(f"  dist/OkumaAtolyesi: {mb:.0f} MB")
 
 
-def _ortam() -> dict:
-    gecici = KOK / "build" / "dogrulama"
-    shutil.rmtree(gecici, ignore_errors=True)
-    (gecici / "appdata").mkdir(parents=True)
-    (gecici / "ev").mkdir()
-    return dict(os.environ, APPDATA=str(gecici / "appdata"), USERPROFILE=str(gecici / "ev"),
-                OKUMA_DATA_DIR=str(gecici / "veri"), OKUMA_LINK_DB=str(gecici / "link.sqlite3"),
-                OKUMA_SETTINGS=str(gecici / "ayarlar.ini"))
-
-
 def dogrula() -> None:
     print("\n[2/3] Doğrulama (paketlenmiş exe ile)")
-    ortam = _ortam()
+    with tempfile.TemporaryDirectory(prefix="okuma-build-check-") as tmp:
+        _dogrula(dogrulama_ortami(Path(tmp)))
+
+
+def _dogrula(ortam: dict[str, str]) -> None:
 
     print("  sayfa çizim süreci (--render-worker) ...")
-    p = subprocess.Popen([str(EXE), "--render-worker"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, env=ortam)
-    try:
-        istek = {"id": 1, "path": str(KOK / "Ornek_Belge.pdf"), "page": 1, "scale": 0.5, "annotations": [], "alpha": False}
-        p.stdin.write((json.dumps(istek) + "\n").encode()); p.stdin.flush()
-        baslik = json.loads(p.stdout.readline() or b"{}")
-        if "error" in baslik or not baslik.get("n"):
-            raise SystemExit(f"Sayfa üretilemedi: {baslik}\n{p.stderr.read()[-1500:]!r}")
-        veri = p.stdout.read(baslik["n"])
-        if len(veri) != baslik["n"]:
-            raise SystemExit("Sayfa verisi eksik geldi.")
-        print(f"    {baslik['w']}x{baslik['h']} piksel üretildi")
-    finally:
-        p.kill()
+    istek = {"id": 1, "path": str(KOK / "Ornek_Belge.pdf"), "page": 1,
+             "scale": 0.5, "annotations": [], "alpha": False}
+    baslik, veri = sorgula([str(EXE), "--render-worker"], istek, env=ortam, ikili_alan="n")
+    if (baslik.get("id") != 1 or baslik.get("version") != SURUM or "error" in baslik or
+        any(type(baslik.get(k)) is not int or baslik[k] <= 0 for k in ("w", "h", "stride", "channels")) or
+        baslik["channels"] not in (3, 4) or baslik["stride"] < baslik["w"] * baslik["channels"] or
+        len(veri) != baslik["h"] * baslik["stride"]):
+        raise SystemExit("Sayfa üretim sürecinin yanıtı geçersiz.")
+    print(f"    {baslik['w']}x{baslik['h']} piksel üretildi")
 
     print("  MCP sunucusu (--mcp) ...")
-    p = subprocess.Popen([str(EXE), "--mcp"], stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                         stderr=subprocess.PIPE, env=ortam)
-    try:
-        p.stdin.write(b'{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05",'
-                      b'"capabilities":{},"clientInfo":{"name":"build","version":"0"}}}\n')
-        p.stdin.flush()
-        bas, satir = time.monotonic(), b""
-        while time.monotonic() - bas < 60:
-            satir = p.stdout.readline()
-            if satir.strip():
-                break
-        if b'"result"' not in satir or b"serverInfo" not in satir:
-            raise SystemExit(f"MCP sunucusu cevap vermedi: {satir[:300]!r}\n{p.stderr.read()[-1500:]!r}")
-        print("    initialize -> " + satir.decode("utf-8", "replace")[:100].strip() + " ...")
-    finally:
-        p.kill()
+    istek = {"jsonrpc": "2.0", "id": 1, "method": "initialize", "params": {
+        "protocolVersion": "2024-11-05", "capabilities": {},
+        "clientInfo": {"name": "build", "version": "0"}}}
+    yanit, _ = sorgula([str(EXE), "--mcp"], istek, env=ortam)
+    if yanit.get("id") != 1 or not isinstance(yanit.get("result"), dict) or "serverInfo" not in yanit["result"]:
+        raise SystemExit("MCP sunucusu initialize'a geçerli cevap vermedi.")
+    print("    initialize -> serverInfo var")
 
     print("  okuyucu penceresi (offscreen, 8 sn ayakta kalmalı) ...")
-    p = subprocess.Popen([str(EXE)], env=dict(ortam, QT_QPA_PLATFORM="offscreen"),
-                         stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    try:
-        time.sleep(8)
-        if p.poll() is not None:
-            raise SystemExit(f"Okuyucu kapandı (çıkış {p.returncode}): {p.stderr.read()[-1500:]!r}")
-        print("    açık")
-    finally:
-        p.kill()
+    pencere_dogrula([str(EXE)], env=dict(ortam, QT_QPA_PLATFORM="offscreen"))
+    print("    açık")
     print("  DOGRULANDI")
 
 
